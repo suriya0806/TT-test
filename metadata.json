@@ -1,0 +1,6 @@
+{
+  "name": "Smart Timetable Generator",
+  "description": "Automated college timetable generator, optimizer, and constraint conflict resolution engine with class-wise and staff-wise schedule management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

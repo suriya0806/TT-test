@@ -1,0 +1,362 @@
+import {
+  ClassInfo,
+  ConstraintsConfig,
+  ScheduleConfig,
+  Staff,
+  Subject,
+  TimetableEntry,
+} from '../types';
+
+export const initialScheduleConfig: ScheduleConfig = {
+  workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+  periodsPerDay: 9,
+  periodDurationMinutes: 45,
+  startTime: '09:00',
+  breaks: [
+    { afterPeriod: 3, label: 'Morning Tea Break', durationMinutes: 15 },
+    { afterPeriod: 5, label: 'Lunch Break', durationMinutes: 45 },
+    { afterPeriod: 7, label: 'Afternoon Break', durationMinutes: 15 },
+  ],
+};
+
+export const initialStaff: Staff[] = [
+  {
+    id: 'staff-1',
+    name: 'Dr. Suriya',
+    department: 'Computer Science & Engineering',
+    email: 'suriya.cse@college.edu',
+    subjectIds: ['subj-ai', 'subj-ml', 'subj-python', 'subj-dbms'],
+    maxPeriodsPerWeek: 26,
+    unavailableSlots: [{ day: 'Friday', period: 9 }],
+    preferredSlots: [
+      { day: 'Monday', period: 1 },
+      { day: 'Wednesday', period: 2 },
+    ],
+    maxConsecutivePeriods: 3,
+  },
+  {
+    id: 'staff-2',
+    name: 'Prof. Arun',
+    department: 'Mathematics & Science',
+    email: 'arun.math@college.edu',
+    subjectIds: ['subj-math', 'subj-stat', 'subj-ds'],
+    maxPeriodsPerWeek: 26,
+    unavailableSlots: [],
+    preferredSlots: [{ day: 'Tuesday', period: 1 }],
+    maxConsecutivePeriods: 3,
+  },
+  {
+    id: 'staff-3',
+    name: 'Dr. Priya',
+    department: 'Computer Science & Engineering',
+    email: 'priya.cse@college.edu',
+    subjectIds: ['subj-dbms', 'subj-dbms-lab', 'subj-web'],
+    maxPeriodsPerWeek: 26,
+    unavailableSlots: [{ day: 'Friday', period: 9 }],
+    preferredSlots: [],
+    maxConsecutivePeriods: 3,
+  },
+  {
+    id: 'staff-4',
+    name: 'Prof. Karthik',
+    department: 'Information Technology',
+    email: 'karthik.it@college.edu',
+    subjectIds: ['subj-cn', 'subj-os', 'subj-cloud'],
+    maxPeriodsPerWeek: 26,
+    unavailableSlots: [],
+    preferredSlots: [],
+    maxConsecutivePeriods: 3,
+  },
+  {
+    id: 'staff-5',
+    name: 'Dr. Rajesh',
+    department: 'Computer Science & Engineering',
+    email: 'rajesh.cse@college.edu',
+    subjectIds: ['subj-ai-lab', 'subj-ml', 'subj-ai'],
+    maxPeriodsPerWeek: 24,
+    unavailableSlots: [{ day: 'Wednesday', period: 8 }],
+    preferredSlots: [],
+    maxConsecutivePeriods: 3,
+  },
+  {
+    id: 'staff-6',
+    name: 'Prof. Ananya',
+    department: 'Information Technology',
+    email: 'ananya.it@college.edu',
+    subjectIds: ['subj-web', 'subj-os', 'subj-cn'],
+    maxPeriodsPerWeek: 24,
+    unavailableSlots: [],
+    preferredSlots: [],
+    maxConsecutivePeriods: 3,
+  },
+  {
+    id: 'staff-7',
+    name: 'Dr. Vikram (Staff 7)',
+    department: 'Mathematics & Computing',
+    email: 'vikram.math@college.edu',
+    subjectIds: ['subj-math', 'subj-stat', 'subj-ds', 'subj-ai'],
+    maxPeriodsPerWeek: 26,
+    unavailableSlots: [],
+    preferredSlots: [],
+    maxConsecutivePeriods: 3,
+  },
+  {
+    id: 'staff-8',
+    name: 'Prof. Meera (Staff 8)',
+    department: 'Information Technology',
+    email: 'meera.it@college.edu',
+    subjectIds: ['subj-cloud', 'subj-dbms', 'subj-dbms-lab', 'subj-python'],
+    maxPeriodsPerWeek: 26,
+    unavailableSlots: [],
+    preferredSlots: [],
+    maxConsecutivePeriods: 3,
+  },
+];
+
+export const initialSubjects: Subject[] = [
+  {
+    id: 'subj-ai',
+    code: 'CS601',
+    name: 'Artificial Intelligence',
+    type: 'Theory',
+    requiredPeriodsPerWeek: 4,
+    eligibleStaffIds: ['staff-1', 'staff-5', 'staff-7'],
+    consecutivePeriodsRequired: 1,
+    roomRequired: 'LH-101',
+  },
+  {
+    id: 'subj-ml',
+    code: 'CS602',
+    name: 'Machine Learning',
+    type: 'Theory',
+    requiredPeriodsPerWeek: 4,
+    eligibleStaffIds: ['staff-1', 'staff-5'],
+    consecutivePeriodsRequired: 1,
+    roomRequired: 'LH-102',
+  },
+  {
+    id: 'subj-dbms',
+    code: 'CS603',
+    name: 'Database Management Systems',
+    type: 'Theory',
+    requiredPeriodsPerWeek: 4,
+    eligibleStaffIds: ['staff-1', 'staff-3', 'staff-8'],
+    consecutivePeriodsRequired: 1,
+    roomRequired: 'LH-103',
+  },
+  {
+    id: 'subj-cn',
+    code: 'CS604',
+    name: 'Computer Networks',
+    type: 'Theory',
+    requiredPeriodsPerWeek: 4,
+    eligibleStaffIds: ['staff-4', 'staff-6'],
+    consecutivePeriodsRequired: 1,
+    roomRequired: 'LH-104',
+  },
+  {
+    id: 'subj-math',
+    code: 'MA601',
+    name: 'Discrete Mathematics & Optimization',
+    type: 'Theory',
+    requiredPeriodsPerWeek: 5,
+    eligibleStaffIds: ['staff-2', 'staff-7'],
+    consecutivePeriodsRequired: 1,
+    roomRequired: 'LH-105',
+  },
+  {
+    id: 'subj-ai-lab',
+    code: 'CS601L',
+    name: 'AI & Data Intelligence Lab',
+    type: 'Lab',
+    requiredPeriodsPerWeek: 2,
+    eligibleStaffIds: ['staff-5', 'staff-1'],
+    consecutivePeriodsRequired: 2,
+    roomRequired: 'Advanced AI Computing Lab',
+  },
+  {
+    id: 'subj-web',
+    code: 'IT601',
+    name: 'Web Technologies & Frameworks',
+    type: 'Theory',
+    requiredPeriodsPerWeek: 4,
+    eligibleStaffIds: ['staff-3', 'staff-6'],
+    consecutivePeriodsRequired: 1,
+    roomRequired: 'LH-201',
+  },
+  {
+    id: 'subj-os',
+    code: 'CS605',
+    name: 'Operating Systems & Virtualization',
+    type: 'Theory',
+    requiredPeriodsPerWeek: 4,
+    eligibleStaffIds: ['staff-4', 'staff-6'],
+    consecutivePeriodsRequired: 1,
+    roomRequired: 'LH-202',
+  },
+  {
+    id: 'subj-cloud',
+    code: 'IT602',
+    name: 'Cloud Computing & DevOps',
+    type: 'Theory',
+    requiredPeriodsPerWeek: 4,
+    eligibleStaffIds: ['staff-4', 'staff-8'],
+    consecutivePeriodsRequired: 1,
+    roomRequired: 'LH-203',
+  },
+  {
+    id: 'subj-dbms-lab',
+    code: 'CS603L',
+    name: 'DBMS & Query Optimization Lab',
+    type: 'Lab',
+    requiredPeriodsPerWeek: 2,
+    eligibleStaffIds: ['staff-3', 'staff-8'],
+    consecutivePeriodsRequired: 2,
+    roomRequired: 'Database & Cloud Lab',
+  },
+];
+
+export const initialClasses: ClassInfo[] = [
+  {
+    id: 'class-cse-3a',
+    department: 'Computer Science & Engineering',
+    year: 'III',
+    section: 'A',
+    name: 'CSE III A',
+    room: 'Room 301 (CSE Block)',
+    subjects: [
+      { subjectId: 'subj-ai', periodsPerWeek: 4 },
+      { subjectId: 'subj-ml', periodsPerWeek: 4 },
+      { subjectId: 'subj-dbms', periodsPerWeek: 4 },
+      { subjectId: 'subj-cn', periodsPerWeek: 4 },
+      { subjectId: 'subj-math', periodsPerWeek: 5 },
+      { subjectId: 'subj-ai-lab', periodsPerWeek: 2 },
+    ],
+  },
+  {
+    id: 'class-cse-3b',
+    department: 'Computer Science & Engineering',
+    year: 'III',
+    section: 'B',
+    name: 'CSE III B',
+    room: 'Room 302 (CSE Block)',
+    subjects: [
+      { subjectId: 'subj-ai', periodsPerWeek: 4 },
+      { subjectId: 'subj-ml', periodsPerWeek: 4 },
+      { subjectId: 'subj-dbms', periodsPerWeek: 4 },
+      { subjectId: 'subj-web', periodsPerWeek: 4 },
+      { subjectId: 'subj-math', periodsPerWeek: 5 },
+      { subjectId: 'subj-dbms-lab', periodsPerWeek: 2 },
+    ],
+  },
+  {
+    id: 'class-it-2a',
+    department: 'Information Technology',
+    year: 'II',
+    section: 'A',
+    name: 'IT II A',
+    room: 'Room 205 (IT Block)',
+    subjects: [
+      { subjectId: 'subj-os', periodsPerWeek: 4 },
+      { subjectId: 'subj-cloud', periodsPerWeek: 4 },
+      { subjectId: 'subj-dbms', periodsPerWeek: 4 },
+      { subjectId: 'subj-math', periodsPerWeek: 5 },
+      { subjectId: 'subj-web', periodsPerWeek: 4 },
+      { subjectId: 'subj-ai-lab', periodsPerWeek: 2 },
+    ],
+  },
+];
+
+export const initialConstraintsConfig: ConstraintsConfig = {
+  hard: {
+    teacherConflict: true,
+    classConflict: true,
+    teacherEligibility: true,
+    requiredSubjectPeriods: true,
+    teacherMaxWorkload: true,
+    labConsecutive: true,
+    respectUnavailability: true,
+  },
+  soft: {
+    avoidTooManyConsecutivePeriods: true,
+    maxConsecutivePeriodsLimit: 3,
+    avoidTooManyGaps: true,
+    balanceTeacherWorkload: true,
+    spreadSubjectsEvenlyAcrossWeek: true,
+    avoidSameHourDaily: true,
+    shufflePeriodsRandomly: true,
+    maxSameSubjectPerDay: 2,
+    respectTeacherPreferences: true,
+    minimizeExistingChanges: true,
+  },
+  dynamic: [
+    {
+      id: 'dyn-1',
+      name: 'Dr. Suriya Morning Preference',
+      type: 'TEACHER_TIME_WINDOW',
+      enabled: true,
+      params: { staffId: 'staff-1', timeWindow: 'MORNING' },
+    },
+    {
+      id: 'dyn-2',
+      name: 'No more than 2 Mathematics periods per day',
+      type: 'SUBJECT_DAILY_MAX',
+      enabled: true,
+      params: { subjectId: 'subj-math', maxPerDay: 2 },
+    },
+  ],
+};
+
+// Realistic initial partially completed timetable:
+// Staff 1 to 6 have assigned slots.
+// Staff 7 (Vikram) & Staff 8 (Meera) are missing (have 0 slots).
+// Includes 1 deliberate teacher clash on Monday Period 3 (Dr. Suriya assigned to both CSE III A and CSE III B)
+// for realistic conflict detection & auto-resolution demonstration!
+export const initialExistingTimetable: TimetableEntry[] = [
+  // Class CSE III A partial allocations:
+  { id: 'ex-1', day: 'Monday', period: 1, classId: 'class-cse-3a', subjectId: 'subj-ai', staffId: 'staff-1', room: 'LH-101', isLocked: true },
+  { id: 'ex-2', day: 'Monday', period: 2, classId: 'class-cse-3a', subjectId: 'subj-ml', staffId: 'staff-1', room: 'LH-102', isLocked: true },
+  // Intentional Conflict on Monday P3: Staff-1 (Dr. Suriya) double booked!
+  { id: 'ex-3', day: 'Monday', period: 3, classId: 'class-cse-3a', subjectId: 'subj-dbms', staffId: 'staff-1', room: 'LH-103', isLocked: true },
+  { id: 'ex-4', day: 'Monday', period: 4, classId: 'class-cse-3a', subjectId: 'subj-cn', staffId: 'staff-4', room: 'LH-104', isLocked: true },
+  { id: 'ex-5', day: 'Tuesday', period: 1, classId: 'class-cse-3a', subjectId: 'subj-math', staffId: 'staff-2', room: 'LH-105', isLocked: true },
+  { id: 'ex-6', day: 'Tuesday', period: 2, classId: 'class-cse-3a', subjectId: 'subj-math', staffId: 'staff-2', room: 'LH-105', isLocked: true },
+  { id: 'ex-7', day: 'Tuesday', period: 3, classId: 'class-cse-3a', subjectId: 'subj-ai', staffId: 'staff-1', room: 'LH-101', isLocked: true },
+  { id: 'ex-8', day: 'Wednesday', period: 1, classId: 'class-cse-3a', subjectId: 'subj-cn', staffId: 'staff-4', room: 'LH-104', isLocked: true },
+  { id: 'ex-9', day: 'Wednesday', period: 2, classId: 'class-cse-3a', subjectId: 'subj-ml', staffId: 'staff-5', room: 'LH-102', isLocked: true },
+  { id: 'ex-10', day: 'Wednesday', period: 5, classId: 'class-cse-3a', subjectId: 'subj-ai-lab', staffId: 'staff-5', room: 'AI Lab', isLocked: true },
+  { id: 'ex-11', day: 'Wednesday', period: 6, classId: 'class-cse-3a', subjectId: 'subj-ai-lab', staffId: 'staff-5', room: 'AI Lab', isLocked: true },
+  { id: 'ex-12', day: 'Thursday', period: 1, classId: 'class-cse-3a', subjectId: 'subj-ai', staffId: 'staff-1', room: 'LH-101', isLocked: true },
+  { id: 'ex-13', day: 'Thursday', period: 2, classId: 'class-cse-3a', subjectId: 'subj-ml', staffId: 'staff-5', room: 'LH-102', isLocked: true },
+  { id: 'ex-14', day: 'Friday', period: 1, classId: 'class-cse-3a', subjectId: 'subj-cn', staffId: 'staff-4', room: 'LH-104', isLocked: true },
+
+  // Class CSE III B partial allocations:
+  // INTENTIONAL TEACHER CLASH with ex-3: Monday Period 3 Dr. Suriya also assigned to CSE III B!
+  { id: 'ex-15', day: 'Monday', period: 3, classId: 'class-cse-3b', subjectId: 'subj-ai', staffId: 'staff-1', room: 'LH-101', isLocked: true },
+  { id: 'ex-16', day: 'Monday', period: 4, classId: 'class-cse-3b', subjectId: 'subj-ml', staffId: 'staff-5', room: 'LH-102', isLocked: true },
+  { id: 'ex-17', day: 'Tuesday', period: 3, classId: 'class-cse-3b', subjectId: 'subj-web', staffId: 'staff-3', room: 'LH-201', isLocked: true },
+  { id: 'ex-18', day: 'Tuesday', period: 4, classId: 'class-cse-3b', subjectId: 'subj-web', staffId: 'staff-6', room: 'LH-201', isLocked: true },
+  { id: 'ex-19', day: 'Wednesday', period: 3, classId: 'class-cse-3b', subjectId: 'subj-dbms', staffId: 'staff-3', room: 'LH-103', isLocked: true },
+  { id: 'ex-20', day: 'Wednesday', period: 4, classId: 'class-cse-3b', subjectId: 'subj-ai', staffId: 'staff-5', room: 'LH-101', isLocked: true },
+  { id: 'ex-21', day: 'Thursday', period: 5, classId: 'class-cse-3b', subjectId: 'subj-dbms-lab', staffId: 'staff-3', room: 'DBMS Lab', isLocked: true },
+  { id: 'ex-22', day: 'Thursday', period: 6, classId: 'class-cse-3b', subjectId: 'subj-dbms-lab', staffId: 'staff-3', room: 'DBMS Lab', isLocked: true },
+  { id: 'ex-23', day: 'Friday', period: 2, classId: 'class-cse-3b', subjectId: 'subj-math', staffId: 'staff-2', room: 'LH-105', isLocked: true },
+
+  // Class IT II A partial allocations:
+  { id: 'ex-24', day: 'Monday', period: 1, classId: 'class-it-2a', subjectId: 'subj-os', staffId: 'staff-4', room: 'LH-202', isLocked: true },
+  { id: 'ex-25', day: 'Monday', period: 2, classId: 'class-it-2a', subjectId: 'subj-os', staffId: 'staff-6', room: 'LH-202', isLocked: true },
+  { id: 'ex-26', day: 'Tuesday', period: 5, classId: 'class-it-2a', subjectId: 'subj-ai-lab', staffId: 'staff-5', room: 'AI Lab', isLocked: true },
+  { id: 'ex-27', day: 'Tuesday', period: 6, classId: 'class-it-2a', subjectId: 'subj-ai-lab', staffId: 'staff-5', room: 'AI Lab', isLocked: true },
+  { id: 'ex-28', day: 'Wednesday', period: 1, classId: 'class-it-2a', subjectId: 'subj-web', staffId: 'staff-3', room: 'LH-201', isLocked: true },
+  { id: 'ex-29', day: 'Wednesday', period: 2, classId: 'class-it-2a', subjectId: 'subj-web', staffId: 'staff-6', room: 'LH-201', isLocked: true },
+  { id: 'ex-30', day: 'Thursday', period: 3, classId: 'class-it-2a', subjectId: 'subj-os', staffId: 'staff-4', room: 'LH-202', isLocked: true },
+  { id: 'ex-31', day: 'Friday', period: 3, classId: 'class-it-2a', subjectId: 'subj-math', staffId: 'staff-2', room: 'LH-105', isLocked: true },
+];
+
+export const SAMPLE_STAFF = initialStaff;
+export const SAMPLE_SUBJECTS = initialSubjects;
+export const SAMPLE_CLASSES = initialClasses;
+export const SAMPLE_EXISTING_ENTRIES = initialExistingTimetable;
+export const DEFAULT_SCHEDULE_CONFIG = initialScheduleConfig;
+export const DEFAULT_CONSTRAINTS = initialConstraintsConfig;
+
