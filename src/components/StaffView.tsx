@@ -115,7 +115,13 @@ export const StaffView: React.FC<StaffViewProps> = ({
     setFormName(staff.name);
     setFormDept(staff.department);
     setFormEmail(staff.email || '');
-    setFormSubjectIds(staff.subjectIds || []);
+    const combinedSubjectIds = Array.from(
+      new Set([
+        ...(staff.subjectIds || []),
+        ...subjectsList.filter((sub) => sub.eligibleStaffIds?.includes(staff.id)).map((sub) => sub.id),
+      ])
+    );
+    setFormSubjectIds(combinedSubjectIds);
     setFormMaxPeriods(staff.maxPeriodsPerWeek || 20);
     setFormUnavailableSlots(staff.unavailableSlots || []);
     setFormPreferredSlots(staff.preferredSlots || []);
@@ -237,8 +243,8 @@ export const StaffView: React.FC<StaffViewProps> = ({
       {/* View Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">Staff & Faculty Management</h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Staff & Faculty Management</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Configure faculty qualifications, max workload limits, custom departments, and time slot availability.
           </p>
         </div>
@@ -251,17 +257,17 @@ export const StaffView: React.FC<StaffViewProps> = ({
                   onClearAllStaff();
                 }
               }}
-              className="px-3 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-2 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
               title="Clear all faculty"
             >
-              <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+              <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
               <span>Clear All Faculty</span>
             </button>
           )}
           <button
             id="btn-add-staff"
             onClick={openAddModal}
-            className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+            className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 rounded-lg transition-colors shadow-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Faculty Member</span>
@@ -270,16 +276,16 @@ export const StaffView: React.FC<StaffViewProps> = ({
       </div>
 
       {/* Filters & Search Toolbar */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-3 transition-colors">
         <div className="relative flex-1 min-w-[240px]">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
+          <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" />
           <input
             type="text"
             id="staff-search-input"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search by faculty name or ID..."
-            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50/50"
+            className="w-full pl-9 pr-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-50/50 dark:bg-slate-800/70 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500"
           />
         </div>
 
@@ -288,7 +294,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
             id="staff-dept-filter"
             value={deptFilter}
             onChange={(e) => setDeptFilter(e.target.value)}
-            className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+            className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden cursor-pointer"
           >
             <option value="ALL">All Departments</option>
             {departments.map((d) => (
@@ -302,7 +308,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
             id="staff-subject-filter"
             value={subjectFilter}
             onChange={(e) => setSubjectFilter(e.target.value)}
-            className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white text-slate-700 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+            className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden cursor-pointer"
           >
             <option value="ALL">All Subjects</option>
             {subjectsList.map((s) => (
@@ -316,14 +322,14 @@ export const StaffView: React.FC<StaffViewProps> = ({
 
       {/* Empty State or Staff Grid */}
       {filteredStaff.length === 0 ? (
-        <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
             <Users className="w-6 h-6" />
           </div>
-          <h3 className="text-sm font-bold text-slate-800">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
             {staffList.length === 0 ? 'No Faculty Members Configured' : 'No matching faculty found'}
           </h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
             {staffList.length === 0
               ? 'Start by adding your professors, lecturers, and instructors. All values and parameters are fully customizable.'
               : 'Try adjusting your search keywords or department filters.'}
@@ -331,7 +337,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
           {staffList.length === 0 && (
             <button
               onClick={openAddModal}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors inline-flex items-center gap-1.5 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Add Your First Faculty</span>
@@ -341,23 +347,25 @@ export const StaffView: React.FC<StaffViewProps> = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredStaff.map((staff) => {
-            const eligibleSubjects = subjectsList.filter((s) => staff.subjectIds.includes(s.id));
+            const eligibleSubjects = subjectsList.filter(
+              (s) => (staff.subjectIds && staff.subjectIds.includes(s.id)) || (s.eligibleStaffIds && s.eligibleStaffIds.includes(staff.id))
+            );
             return (
               <div
                 key={staff.id}
                 id={`staff-card-${staff.id}`}
-                className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 transition-all space-y-4"
+                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all space-y-4"
               >
                 <div>
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-bold text-sm text-slate-900 flex items-center gap-2">
+                      <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-2">
                         {staff.name}
-                        <span className="text-[10px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                           {staff.id}
                         </span>
                       </h3>
-                      <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
                         <Building className="w-3 h-3 text-slate-400 shrink-0" />
                         <span>{staff.department}</span>
                       </p>
@@ -366,21 +374,21 @@ export const StaffView: React.FC<StaffViewProps> = ({
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleDuplicateStaff(staff)}
-                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer"
                         title="Duplicate Faculty"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => openEditModal(staff)}
-                        className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-slate-50 rounded transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded transition-colors cursor-pointer"
                         title="Edit Faculty"
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => onDeleteStaff(staff.id)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded transition-colors cursor-pointer"
                         title="Delete Faculty"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -389,14 +397,14 @@ export const StaffView: React.FC<StaffViewProps> = ({
                   </div>
 
                   {/* Workload & Constraints summary */}
-                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                  <div className="mt-4 grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold">Max Workload</span>
-                      <p className="font-semibold text-slate-800">{staff.maxPeriodsPerWeek} periods/week</p>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold">Max Workload</span>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{staff.maxPeriodsPerWeek} periods/week</p>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase font-semibold">Unavail. Slots</span>
-                      <p className="font-semibold text-slate-800">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold">Unavail. Slots</span>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">
                         {staff.unavailableSlots?.length ? `${staff.unavailableSlots.length} slot(s)` : 'None'}
                       </p>
                     </div>
@@ -404,7 +412,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
 
                   {/* Qualified Subjects (Multi-subject showcase) */}
                   <div className="mt-3">
-                    <span className="text-[11px] font-semibold text-slate-600 block mb-1.5">
+                    <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1.5">
                       Qualified Subjects ({eligibleSubjects.length})
                     </span>
                     <div className="flex flex-wrap gap-1.5">
@@ -412,13 +420,13 @@ export const StaffView: React.FC<StaffViewProps> = ({
                         eligibleSubjects.map((sub) => (
                           <span
                             key={sub.id}
-                            className="px-2 py-0.5 text-[11px] font-medium bg-indigo-50 text-indigo-700 rounded border border-indigo-100"
+                            className="px-2 py-0.5 text-[11px] font-medium bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 rounded border border-indigo-100 dark:border-indigo-800"
                           >
                             {sub.code} ({sub.name})
                           </span>
                         ))
                       ) : (
-                        <span className="text-xs text-amber-600 italic">No subjects assigned</span>
+                        <span className="text-xs text-amber-600 dark:text-amber-400 italic">No subjects assigned</span>
                       )}
                     </div>
                   </div>
@@ -431,15 +439,15 @@ export const StaffView: React.FC<StaffViewProps> = ({
 
       {/* Add / Edit Staff Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
-              <h3 className="font-bold text-base text-slate-900">
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
+              <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
                 {editingStaff ? `Edit Faculty: ${editingStaff.name}` : 'Add New Faculty Member'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -447,7 +455,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
 
             <form onSubmit={handleSaveStaff} className="p-6 space-y-4">
               {validationError && (
-                <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-2 text-xs text-rose-700">
+                <div className="p-3 bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 rounded-lg flex items-center gap-2 text-xs text-rose-700 dark:text-rose-300">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{validationError}</span>
                 </div>
@@ -455,7 +463,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Faculty ID <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -467,12 +475,12 @@ export const StaffView: React.FC<StaffViewProps> = ({
                       if (validationError) setValidationError('');
                     }}
                     placeholder="e.g. staff-cse-01"
-                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Full Name <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -484,12 +492,12 @@ export const StaffView: React.FC<StaffViewProps> = ({
                       if (validationError) setValidationError('');
                     }}
                     placeholder="e.g. Dr. Suriya"
-                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Department <span className="text-rose-500">*</span>
                   </label>
                   <input
@@ -499,7 +507,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
                     value={formDept}
                     onChange={(e) => setFormDept(e.target.value)}
                     placeholder="Type or pick department"
-                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden bg-white"
+                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                   />
                   <datalist id="staff-department-options">
                     {departments.map((dept) => (
@@ -509,18 +517,18 @@ export const StaffView: React.FC<StaffViewProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
                   <input
                     type="email"
                     value={formEmail}
                     onChange={(e) => setFormEmail(e.target.value)}
                     placeholder="name@college.edu"
-                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Max Periods Per Week
                   </label>
                   <input
@@ -529,12 +537,12 @@ export const StaffView: React.FC<StaffViewProps> = ({
                     max={40}
                     value={formMaxPeriods}
                     onChange={(e) => setFormMaxPeriods(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Max Consecutive Periods
                   </label>
                   <input
@@ -543,7 +551,7 @@ export const StaffView: React.FC<StaffViewProps> = ({
                     max={6}
                     value={formMaxConsecutive}
                     onChange={(e) => setFormMaxConsecutive(e.target.value)}
-                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                   />
                 </div>
               </div>
@@ -551,14 +559,14 @@ export const StaffView: React.FC<StaffViewProps> = ({
               {/* Multi-Subject Selection */}
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-semibold text-slate-700">
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
                     Eligible / Qualified Subjects
                   </label>
-                  <span className="text-[11px] text-slate-500">
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400">
                     Selected: {formSubjectIds.length} subject(s)
                   </span>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2.5 border border-slate-200 rounded-lg bg-slate-50">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto p-2.5 border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/60">
                   {subjectsList.map((sub) => {
                     const isSelected = formSubjectIds.includes(sub.id);
                     return (
@@ -566,21 +574,21 @@ export const StaffView: React.FC<StaffViewProps> = ({
                         key={sub.id}
                         type="button"
                         onClick={() => toggleSubject(sub.id)}
-                        className={`p-2 rounded text-left text-xs transition-colors flex items-center justify-between border ${
+                        className={`p-2 rounded text-left text-xs transition-colors flex items-center justify-between border cursor-pointer ${
                           isSelected
-                            ? 'bg-indigo-50 border-indigo-300 text-indigo-900 font-medium'
-                            : 'bg-white border-slate-200 text-slate-700 hover:border-slate-300'
+                            ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-300 dark:border-indigo-600 text-indigo-900 dark:text-indigo-200 font-medium'
+                            : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'
                         }`}
                       >
                         <span className="truncate">
                           {sub.code} - {sub.name}
                         </span>
-                        {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0 ml-1" />}
+                        {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400 shrink-0 ml-1" />}
                       </button>
                     );
                   })}
                   {subjectsList.length === 0 && (
-                    <div className="col-span-3 text-center py-4 text-xs text-slate-400">
+                    <div className="col-span-3 text-center py-4 text-xs text-slate-400 dark:text-slate-500">
                       No subjects available in database yet.
                     </div>
                   )}
@@ -591,10 +599,10 @@ export const StaffView: React.FC<StaffViewProps> = ({
               <div>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                   <div>
-                    <label className="text-xs font-semibold text-slate-700 block">
+                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
                       Slot Availability Matrix
                     </label>
-                    <span className="text-[11px] text-slate-500">
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
                       Click slots: Gray = FREE, Red = BUSY (Unavailable)
                     </span>
                   </div>
@@ -603,34 +611,34 @@ export const StaffView: React.FC<StaffViewProps> = ({
                     <button
                       type="button"
                       onClick={setAllSlotsFree}
-                      className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-200"
+                      className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700 cursor-pointer"
                     >
                       All Free
                     </button>
                     <button
                       type="button"
                       onClick={setMorningBusy}
-                      className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-200"
+                      className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700 cursor-pointer"
                     >
                       Busy Morning
                     </button>
                     <button
                       type="button"
                       onClick={setAfternoonBusy}
-                      className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded border border-slate-200"
+                      className="px-2 py-0.5 text-[10px] font-medium bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded border border-slate-200 dark:border-slate-700 cursor-pointer"
                     >
                       Busy Afternoon
                     </button>
                   </div>
                 </div>
 
-                <div className="overflow-x-auto border border-slate-200 rounded-lg bg-slate-50 p-2">
+                <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800/60 p-2">
                   <table className="w-full text-xs text-center border-collapse">
                     <thead>
                       <tr>
-                        <th className="p-1 text-left font-semibold text-slate-600 text-[11px]">Day</th>
+                        <th className="p-1 text-left font-semibold text-slate-600 dark:text-slate-300 text-[11px]">Day</th>
                         {Array.from({ length: periodsCount }, (_, i) => (
-                          <th key={i} className="p-1 font-semibold text-slate-600 text-[11px]">
+                          <th key={i} className="p-1 font-semibold text-slate-600 dark:text-slate-300 text-[11px]">
                             P{i + 1}
                           </th>
                         ))}
@@ -638,8 +646,8 @@ export const StaffView: React.FC<StaffViewProps> = ({
                     </thead>
                     <tbody>
                       {workingDays.map((day) => (
-                        <tr key={day} className="border-t border-slate-200">
-                          <td className="p-1 text-left font-medium text-slate-700 text-[11px]">{day}</td>
+                        <tr key={day} className="border-t border-slate-200 dark:border-slate-700">
+                          <td className="p-1 text-left font-medium text-slate-700 dark:text-slate-300 text-[11px]">{day}</td>
                           {Array.from({ length: periodsCount }, (_, i) => {
                             const p = i + 1;
                             const isUnavail = formUnavailableSlots.some(
@@ -650,10 +658,10 @@ export const StaffView: React.FC<StaffViewProps> = ({
                                 <button
                                   type="button"
                                   onClick={() => toggleSlotStatus(day, p, 'UNAVAILABLE')}
-                                  className={`w-full py-1 text-[10px] font-bold rounded transition-colors ${
+                                  className={`w-full py-1 text-[10px] font-bold rounded transition-colors cursor-pointer ${
                                     isUnavail
-                                      ? 'bg-rose-500 text-white shadow-xs'
-                                      : 'bg-white hover:bg-slate-200 text-slate-600 border border-slate-200'
+                                      ? 'bg-rose-500 dark:bg-rose-600 text-white shadow-xs'
+                                      : 'bg-white dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                                   }`}
                                 >
                                   {isUnavail ? 'BUSY' : 'FREE'}
@@ -669,17 +677,17 @@ export const StaffView: React.FC<StaffViewProps> = ({
               </div>
 
               {/* Modal Actions */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-100 rounded-lg transition-colors border border-slate-300"
+                  className="px-4 py-2 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-300 dark:border-slate-700 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-xs"
+                  className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 rounded-lg transition-colors shadow-xs cursor-pointer"
                 >
                   {editingStaff ? 'Save Changes' : 'Create Faculty'}
                 </button>

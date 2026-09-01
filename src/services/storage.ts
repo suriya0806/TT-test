@@ -24,6 +24,7 @@ const STORAGE_KEYS = {
   CONSTRAINTS: 'stg_constraints_config',
   EXISTING_TIMETABLE: 'stg_existing_timetable',
   GENERATED_TIMETABLE: 'stg_generated_timetable',
+  THEME: 'stg_theme_preference',
 };
 
 export class StorageService {
@@ -210,6 +211,24 @@ export class StorageService {
       return true;
     } catch {
       return false;
+    }
+  }
+
+  static getTheme(): 'dark' | 'light' {
+    try {
+      const theme = localStorage.getItem(STORAGE_KEYS.THEME);
+      if (theme === 'light' || theme === 'dark') return theme;
+      return 'dark'; // Default to dark theme
+    } catch {
+      return 'dark';
+    }
+  }
+
+  static saveTheme(theme: 'dark' | 'light'): void {
+    try {
+      localStorage.setItem(STORAGE_KEYS.THEME, theme);
+    } catch {
+      // Ignore
     }
   }
 }

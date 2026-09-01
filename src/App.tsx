@@ -44,6 +44,7 @@ import {
 export default function App() {
   // State Initialization
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => StorageService.getTheme());
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [subjectsList, setSubjectsList] = useState<Subject[]>([]);
   const [classesList, setClassesList] = useState<ClassInfo[]>([]);
@@ -63,14 +64,74 @@ export default function App() {
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  // Load from Storage on Initial Render
+  // Sync theme with document class and local storage
   useEffect(() => {
-    setStaffList(StorageService.getStaff());
-    setSubjectsList(StorageService.getSubjects());
-    setClassesList(StorageService.getClasses());
-    setScheduleConfig(StorageService.getScheduleConfig());
-    setConstraintsConfig(StorageService.getConstraints());
-    setEntries(StorageService.getTimetableEntries());
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    StorageService.saveTheme(theme);
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  // Load from Storage on Initial Render and reconcile two-way subject-staff assignments
+  useEffect(() => {
+    const loadedStaff = StorageService.getStaff();
+    const loadedSubjects = StorageService.getSubjects();
+    const loadedClasses = StorageService.getClasses();
+    const loadedSchedule = StorageService.getScheduleConfig();
+    const loadedConstraints = StorageService.getConstraints();
+    const loadedEntries = StorageService.getTimetableEntries();
+
+    // Reconcile two-way relationship between staff.subjectIds and subject.eligibleStaffIds
+    let staffUpdated = false;
+    let subjectsUpdated = false;
+
+    const reconciledStaff = loadedStaff.map((st) => {
+      const additionalSubjectIds = loadedSubjects
+        .filter((sub) => sub.eligibleStaffIds?.includes(st.id) && !st.subjectIds?.includes(sub.id))
+        .map((sub) => sub.id);
+      if (additionalSubjectIds.length > 0) {
+        staffUpdated = true;
+        return {
+          ...st,
+          subjectIds: Array.from(new Set([...(st.subjectIds || []), ...additionalSubjectIds])),
+        };
+      }
+      return st;
+    });
+
+    const reconciledSubjects = loadedSubjects.map((sub) => {
+      const additionalStaffIds = reconciledStaff
+        .filter((st) => st.subjectIds?.includes(sub.id) && !sub.eligibleStaffIds?.includes(st.id))
+        .map((st) => st.id);
+      if (additionalStaffIds.length > 0) {
+        subjectsUpdated = true;
+        return {
+          ...sub,
+          eligibleStaffIds: Array.from(new Set([...(sub.eligibleStaffIds || []), ...additionalStaffIds])),
+        };
+      }
+      return sub;
+    });
+
+    if (staffUpdated) {
+      StorageService.saveStaff(reconciledStaff);
+    }
+    if (subjectsUpdated) {
+      StorageService.saveSubjects(reconciledSubjects);
+    }
+
+    setStaffList(reconciledStaff);
+    setSubjectsList(reconciledSubjects);
+    setClassesList(loadedClasses);
+    setScheduleConfig(loadedSchedule);
+    setConstraintsConfig(loadedConstraints);
+    setEntries(loadedEntries);
   }, []);
 
   // Compute Conflicts in Real-Time
@@ -94,10 +155,10 @@ export default function App() {
     // Sync subjects list so that subjects have this staff member in their eligibleStaffIds
     if (newStaff.subjectIds && newStaff.subjectIds.length > 0) {
       const updatedSubjects = subjectsList.map((sub) => {
-        if (newStaff.subjectIds.includes(sub.id) && !sub.eligibleStaffIds.includes(newStaff.id)) {
+        if (newStaff.subjectIds.includes(sub.id) && !sub.eligibleStaffIds?.includes(newStaff.id)) {
           return {
             ...sub,
-            eligibleStaffIds: [...sub.eligibleStaffIds, newStaff.id],
+            eligibleStaffIds: [...(sub.eligibleStaffIds || []), newStaff.id],
           };
         }
         return sub;
@@ -116,12 +177,12 @@ export default function App() {
 
     // Sync subjects list
     const updatedSubjects = subjectsList.map((sub) => {
-      const isQualified = updatedStaff.subjectIds.includes(sub.id);
-      const currentlyHas = sub.eligibleStaffIds.includes(updatedStaff.id);
+      const isQualified = updatedStaff.subjectIds?.includes(sub.id);
+      const currentlyHas = sub.eligibleStaffIds?.includes(updatedStaff.id);
       if (isQualified && !currentlyHas) {
-        return { ...sub, eligibleStaffIds: [...sub.eligibleStaffIds, updatedStaff.id] };
+        return { ...sub, eligibleStaffIds: [...(sub.eligibleStaffIds || []), updatedStaff.id] };
       } else if (!isQualified && currentlyHas) {
-        return { ...sub, eligibleStaffIds: sub.eligibleStaffIds.filter((id) => id !== updatedStaff.id) };
+        return { ...sub, eligibleStaffIds: (sub.eligibleStaffIds || []).filter((id) => id !== updatedStaff.id) };
       }
       return sub;
     });
@@ -139,7 +200,7 @@ export default function App() {
     // Remove from subjects eligibleStaffIds
     const updatedSubjects = subjectsList.map((sub) => ({
       ...sub,
-      eligibleStaffIds: sub.eligibleStaffIds.filter((id) => id !== staffId),
+      eligibleStaffIds: (sub.eligibleStaffIds || []).filter((id) => id !== staffId),
     }));
     setSubjectsList(updatedSubjects);
     StorageService.saveSubjects(updatedSubjects);
@@ -161,6 +222,22 @@ export default function App() {
     const updated = [...subjectsList, newSubject];
     setSubjectsList(updated);
     StorageService.saveSubjects(updated);
+
+    // Sync staff directory so selected teachers have this subject in their subjectIds
+    if (newSubject.eligibleStaffIds && newSubject.eligibleStaffIds.length > 0) {
+      const updatedStaff = staffList.map((st) => {
+        if (newSubject.eligibleStaffIds.includes(st.id) && !st.subjectIds?.includes(newSubject.id)) {
+          return {
+            ...st,
+            subjectIds: [...(st.subjectIds || []), newSubject.id],
+          };
+        }
+        return st;
+      });
+      setStaffList(updatedStaff);
+      StorageService.saveStaff(updatedStaff);
+    }
+
     showToast(`Added subject ${newSubject.name}`, 'success');
   };
 
@@ -168,6 +245,27 @@ export default function App() {
     const updated = subjectsList.map((s) => (s.id === updatedSubject.id ? updatedSubject : s));
     setSubjectsList(updated);
     StorageService.saveSubjects(updated);
+
+    // Sync staff directory: ensure teachers assigned to this subject have it in their subjectIds, and vice versa
+    const updatedStaff = staffList.map((st) => {
+      const isEligible = updatedSubject.eligibleStaffIds?.includes(st.id);
+      const currentlyHas = st.subjectIds?.includes(updatedSubject.id);
+      if (isEligible && !currentlyHas) {
+        return {
+          ...st,
+          subjectIds: [...(st.subjectIds || []), updatedSubject.id],
+        };
+      } else if (!isEligible && currentlyHas) {
+        return {
+          ...st,
+          subjectIds: (st.subjectIds || []).filter((id) => id !== updatedSubject.id),
+        };
+      }
+      return st;
+    });
+    setStaffList(updatedStaff);
+    StorageService.saveStaff(updatedStaff);
+
     showToast(`Updated subject ${updatedSubject.code}`, 'success');
   };
 
@@ -175,6 +273,30 @@ export default function App() {
     const updated = subjectsList.filter((s) => s.id !== subjectId);
     setSubjectsList(updated);
     StorageService.saveSubjects(updated);
+
+    // Remove subject from all staff members' subjectIds
+    const updatedStaff = staffList.map((st) => ({
+      ...st,
+      subjectIds: (st.subjectIds || []).filter((id) => id !== subjectId),
+    }));
+    setStaffList(updatedStaff);
+    StorageService.saveStaff(updatedStaff);
+
+    // Remove from class curriculums
+    const updatedClasses = classesList.map((cls) => ({
+      ...cls,
+      subjects: cls.subjects.filter((s) => s.subjectId !== subjectId),
+    }));
+    setClassesList(updatedClasses);
+    StorageService.saveClasses(updatedClasses);
+
+    // Remove from timetable entries
+    const updatedEntries = entries.filter((e) => e.subjectId !== subjectId);
+    if (updatedEntries.length !== entries.length) {
+      setEntries(updatedEntries);
+      StorageService.saveTimetableEntries(updatedEntries);
+    }
+
     showToast('Subject deleted', 'info');
   };
 
@@ -288,11 +410,15 @@ export default function App() {
       );
 
       setLastSolveResult(result);
-      if (result.success && result.timetable) {
+      if (result.timetable && result.timetable.length > 0) {
         handleUpdateEntries(result.timetable);
-        showToast('Timetable Generated Successfully!', 'success');
+        if (result.success) {
+          showToast('Timetable Generated Successfully!', 'success');
+        } else {
+          showToast(`Timetable Generated with ${result.validation.conflicts.length} notice(s)`, 'info');
+        }
       } else {
-        showToast(result.message, 'error');
+        showToast(result.message || 'Unable to generate timetable', 'error');
       }
       setIsSolving(false);
       setActiveTab('generate');
@@ -313,11 +439,15 @@ export default function App() {
       );
 
       setLastSolveResult(result);
-      if (result.success && result.timetable) {
+      if (result.timetable && result.timetable.length > 0) {
         handleUpdateEntries(result.timetable);
-        showToast('Timetable Shuffled & Subject Hours Rotated Successfully!', 'success');
+        if (result.success) {
+          showToast('Timetable Shuffled & Subject Hours Rotated Successfully!', 'success');
+        } else {
+          showToast(`Timetable Shuffled with ${result.validation.conflicts.length} notice(s)`, 'info');
+        }
       } else {
-        showToast(result.message, 'error');
+        showToast(result.message || 'Unable to shuffle timetable', 'error');
       }
       setIsSolving(false);
     }, 150);
@@ -337,11 +467,15 @@ export default function App() {
       );
 
       setLastSolveResult(result);
-      if (result.success && result.timetable) {
+      if (result.timetable && result.timetable.length > 0) {
         handleUpdateEntries(result.timetable);
-        showToast('Existing Timetable Completed Successfully!', 'success');
+        if (result.success) {
+          showToast('Existing Timetable Completed Successfully!', 'success');
+        } else {
+          showToast(`Timetable Updated with ${result.validation.conflicts.length} notice(s)`, 'info');
+        }
       } else {
-        showToast(result.message, 'error');
+        showToast(result.message || 'Unable to complete timetable', 'error');
       }
       setIsSolving(false);
       setActiveTab('generate');
@@ -362,11 +496,15 @@ export default function App() {
       );
 
       setLastSolveResult(result);
-      if (result.success && result.timetable) {
+      if (result.timetable && result.timetable.length > 0) {
         handleUpdateEntries(result.timetable);
-        showToast('All conflicts resolved and timetable completed!', 'success');
+        if (result.success) {
+          showToast('All conflicts resolved and timetable completed!', 'success');
+        } else {
+          showToast(`Conflicts resolved with ${result.validation.conflicts.length} notice(s)`, 'info');
+        }
       } else {
-        showToast(result.message, 'error');
+        showToast(result.message || 'Unable to resolve conflicts', 'error');
       }
       setIsSolving(false);
     }, 150);
@@ -396,15 +534,35 @@ export default function App() {
     constraints: ConstraintsConfig;
     entries: TimetableEntry[];
   }) => {
-    setStaffList(data.staff);
-    setSubjectsList(data.subjects);
+    const reconciledStaff = (data.staff || []).map((st) => {
+      const additionalSubjectIds = (data.subjects || [])
+        .filter((sub) => sub.eligibleStaffIds?.includes(st.id) && !st.subjectIds?.includes(sub.id))
+        .map((sub) => sub.id);
+      return {
+        ...st,
+        subjectIds: Array.from(new Set([...(st.subjectIds || []), ...additionalSubjectIds])),
+      };
+    });
+
+    const reconciledSubjects = (data.subjects || []).map((sub) => {
+      const additionalStaffIds = reconciledStaff
+        .filter((st) => st.subjectIds?.includes(sub.id) && !sub.eligibleStaffIds?.includes(st.id))
+        .map((st) => st.id);
+      return {
+        ...sub,
+        eligibleStaffIds: Array.from(new Set([...(sub.eligibleStaffIds || []), ...additionalStaffIds])),
+      };
+    });
+
+    setStaffList(reconciledStaff);
+    setSubjectsList(reconciledSubjects);
     setClassesList(data.classes);
     if (data.scheduleConfig) setScheduleConfig(data.scheduleConfig);
     if (data.constraints) setConstraintsConfig(data.constraints);
     if (data.entries) setEntries(data.entries);
 
-    StorageService.saveStaff(data.staff);
-    StorageService.saveSubjects(data.subjects);
+    StorageService.saveStaff(reconciledStaff);
+    StorageService.saveSubjects(reconciledSubjects);
     StorageService.saveClasses(data.classes);
     if (data.scheduleConfig) StorageService.saveScheduleConfig(data.scheduleConfig);
     if (data.constraints) StorageService.saveConstraints(data.constraints);
@@ -414,7 +572,7 @@ export default function App() {
   };
 
   return (
-    <div id="smart-timetable-app" className="flex h-screen bg-slate-50 text-slate-900 overflow-hidden font-sans antialiased">
+    <div id="smart-timetable-app" className="flex h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden font-sans antialiased transition-colors duration-150">
       {/* Toast Notification Banner */}
       {toastMessage && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in shadow-lg">
@@ -424,7 +582,7 @@ export default function App() {
                 ? 'bg-emerald-600 text-white border-emerald-700'
                 : toastMessage.type === 'error'
                 ? 'bg-rose-600 text-white border-rose-700'
-                : 'bg-slate-900 text-white border-slate-950'
+                : 'bg-slate-900 dark:bg-slate-800 text-white border-slate-950 dark:border-slate-700'
             }`}
           >
             <span>{toastMessage.text}</span>
@@ -442,10 +600,12 @@ export default function App() {
         conflictCount={conflicts.length}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
       />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-50 dark:bg-slate-950">
         <Header
           activeTab={activeTab}
           conflictCount={conflicts.length}
@@ -461,9 +621,11 @@ export default function App() {
           onStartFresh={() => setIsImportModalOpen(true)}
           isSolving={isSolving}
           onToggleMobileMenu={() => setIsMobileMenuOpen((prev) => !prev)}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
         />
 
-        <main className="flex-1 overflow-y-auto bg-slate-100/60">
+        <main className="flex-1 overflow-y-auto bg-slate-100/60 dark:bg-slate-950/90 transition-colors duration-150">
           {activeTab === 'dashboard' && (
             <DashboardView
               staffList={staffList}

@@ -40,7 +40,7 @@ export interface Subject {
   type: SubjectType;
   requiredPeriodsPerWeek: number;
   eligibleStaffIds: string[];
-  consecutivePeriodsRequired: number; // 1 for normal theory, 2 or 3 for labs
+  consecutivePeriodsRequired: number; // 1 for normal theory, 2 for lab, 3 for extended lab, 4 for Naan Mudhalvan / skill block
   roomRequired?: string; // e.g. "Lab 1", "Room 302"
 }
 

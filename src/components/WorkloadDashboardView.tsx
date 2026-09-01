@@ -67,22 +67,22 @@ export const WorkloadDashboardView: React.FC<WorkloadDashboardViewProps> = ({
   return (
     <div id="workload-dashboard-view" className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Top Banner */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
             Faculty Workload & Utilization Analytics
           </h2>
-          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
             Monitor teaching capacity distributions, workload balance equity across departments, and total curriculum fulfillment metrics.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <span className="text-[10px] uppercase font-bold text-slate-400 block">Overall Utilization</span>
-            <span className="text-xl font-bold text-slate-900">{overallUtilization}%</span>
+            <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 block">Overall Utilization</span>
+            <span className="text-xl font-bold text-slate-900 dark:text-slate-100">{overallUtilization}%</span>
           </div>
-          <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-700">
+          <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 flex items-center justify-center text-indigo-700 dark:text-indigo-300">
             <Activity className="w-6 h-6" />
           </div>
         </div>
@@ -90,45 +90,45 @@ export const WorkloadDashboardView: React.FC<WorkloadDashboardViewProps> = ({
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-          <span className="text-xs text-slate-500 font-semibold block">Total Faculty Capacity</span>
-          <span className="text-2xl font-bold text-slate-900 mt-1 block">{totalCapacity} periods</span>
-          <span className="text-[11px] text-slate-400 mt-1 block">Across {staffList.length} instructors</span>
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold block">Total Faculty Capacity</span>
+          <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 block">{totalCapacity} periods</span>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 block">Across {staffList.length} instructors</span>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-          <span className="text-xs text-slate-500 font-semibold block">Curriculum Requirement</span>
-          <span className="text-2xl font-bold text-slate-900 mt-1 block">{totalRequiredPeriods} periods</span>
-          <span className="text-[11px] text-slate-400 mt-1 block">Across {classesList.length} classes</span>
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold block">Curriculum Requirement</span>
+          <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 mt-1 block">{totalRequiredPeriods} periods</span>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 block">Across {classesList.length} classes</span>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-          <span className="text-xs text-slate-500 font-semibold block">Allocated in Timetable</span>
-          <span className="text-2xl font-bold text-indigo-700 mt-1 block">{totalAssignedPeriods} periods</span>
-          <span className="text-[11px] text-emerald-600 font-semibold mt-1 block">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold block">Allocated in Timetable</span>
+          <span className="text-2xl font-bold text-indigo-700 dark:text-indigo-400 mt-1 block">{totalAssignedPeriods} periods</span>
+          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 block">
             {Math.round((totalAssignedPeriods / totalRequiredPeriods) * 100) || 0}% Fulfilled
           </span>
         </div>
 
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-          <span className="text-xs text-slate-500 font-semibold block">Faculty Workload Balance</span>
-          <span className="text-2xl font-bold text-emerald-600 mt-1 block">Balanced</span>
-          <span className="text-[11px] text-slate-400 mt-1 block">0 Overloaded teachers</span>
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs">
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold block">Faculty Workload Balance</span>
+          <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1 block">Balanced</span>
+          <span className="text-[11px] text-slate-400 dark:text-slate-500 mt-1 block">0 Overloaded teachers</span>
         </div>
       </div>
 
       {/* Faculty Workload Table */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="font-bold text-sm text-slate-900">Faculty Workload Breakdown</h3>
-          <span className="text-xs text-slate-500 font-medium">
+          <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Faculty Workload Breakdown</h3>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
             Standard Workload Cap: 16-20 periods/week
           </span>
         </div>
 
-        <div className="overflow-x-auto border border-slate-200 rounded-lg">
+        <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg">
           <table className="w-full text-xs text-left">
-            <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+            <thead className="bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold border-b border-slate-200 dark:border-slate-700">
               <tr>
                 <th className="p-3">Faculty Member</th>
                 <th className="p-3">Department</th>
@@ -139,21 +139,21 @@ export const WorkloadDashboardView: React.FC<WorkloadDashboardViewProps> = ({
                 <th className="p-3">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {staffWorkloadStats.map((item) => (
-                <tr key={item.staff.id} className="hover:bg-slate-50/60">
-                  <td className="p-3 font-bold text-slate-900">
+                <tr key={item.staff.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/60">
+                  <td className="p-3 font-bold text-slate-900 dark:text-slate-100">
                     {item.staff.name}
-                    <span className="block text-[10px] font-normal text-slate-500">
+                    <span className="block text-[10px] font-normal text-slate-500 dark:text-slate-400">
                       {item.staff.designation}
                     </span>
                   </td>
-                  <td className="p-3 text-slate-600">{item.staff.department}</td>
-                  <td className="p-3 font-mono font-bold text-slate-900">{item.assigned} p/wk</td>
-                  <td className="p-3 font-mono text-slate-500">{item.max} p/wk</td>
+                  <td className="p-3 text-slate-600 dark:text-slate-300">{item.staff.department}</td>
+                  <td className="p-3 font-mono font-bold text-slate-900 dark:text-slate-100">{item.assigned} p/wk</td>
+                  <td className="p-3 font-mono text-slate-500 dark:text-slate-400">{item.max} p/wk</td>
                   <td className="p-3">
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 bg-slate-100 rounded-full h-2 overflow-hidden">
+                      <div className="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
                         <div
                           className={`h-full rounded-full ${
                             item.status === 'OVERLOADED'
@@ -165,20 +165,20 @@ export const WorkloadDashboardView: React.FC<WorkloadDashboardViewProps> = ({
                           style={{ width: `${Math.min(100, item.utilPct)}%` }}
                         />
                       </div>
-                      <span className="font-mono text-[11px] font-semibold text-slate-700 w-8 text-right">
+                      <span className="font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300 w-8 text-right">
                         {item.utilPct}%
                       </span>
                     </div>
                   </td>
-                  <td className="p-3 font-semibold text-emerald-600">{item.free} periods</td>
+                  <td className="p-3 font-semibold text-emerald-600 dark:text-emerald-400">{item.free} periods</td>
                   <td className="p-3">
                     <span
                       className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                         item.status === 'OVERLOADED'
-                          ? 'bg-rose-100 text-rose-800'
+                          ? 'bg-rose-100 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300'
                           : item.status === 'UNDERUTILIZED'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-emerald-100 text-emerald-800'
+                          ? 'bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300'
+                          : 'bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300'
                       }`}
                     >
                       {item.status}

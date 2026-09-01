@@ -146,14 +146,14 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between sticky top-0 bg-white z-10">
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between sticky top-0 bg-white dark:bg-slate-900 z-10">
           <div className="flex items-center gap-2">
-            <FileSpreadsheet className="w-5 h-5 text-indigo-600" />
-            <h3 className="font-bold text-base text-slate-900">Data Import & Export Center</h3>
+            <FileSpreadsheet className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">Data Import & Export Center</h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 p-1">
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 cursor-pointer">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -163,40 +163,40 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
             <div
               className={`p-3.5 rounded-lg text-xs flex items-center gap-2.5 ${
                 importStatus.type === 'success'
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                  : 'bg-rose-50 text-rose-800 border border-rose-200'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                  : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
               }`}
             >
               {importStatus.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
               ) : (
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
               )}
               <span>{importStatus.message}</span>
             </div>
           )}
 
           {/* Section 1: Full System Backup */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
-              <FileJson className="w-4 h-4 text-indigo-600" />
+          <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-200 flex items-center gap-2">
+              <FileJson className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
               <span>Full System JSON Backup & Restore</span>
             </h4>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Export your entire timetable setup (all staff, subjects, classes, constraints, and locked allocations) into a single reusable JSON archive.
             </p>
 
             <div className="flex flex-wrap items-center gap-3 pt-1">
               <button
                 onClick={handleJsonBackupDownload}
-                className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-xs flex items-center gap-1.5"
+                className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 rounded-lg transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span>Export System JSON Backup</span>
               </button>
 
-              <label className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5">
-                <Upload className="w-3.5 h-3.5 text-slate-500" />
+              <label className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5">
+                <Upload className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                 <span>Restore From JSON</span>
                 <input
                   type="file"
@@ -210,43 +210,43 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
 
           {/* Section 2: CSV Templates & Entity Imports */}
           <div className="space-y-3">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300">
               Download CSV Import Templates
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <button
                 onClick={() => handleDownloadCsvTemplate('staff')}
-                className="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-left transition-colors space-y-1"
+                className="p-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-lg text-left transition-colors space-y-1 cursor-pointer"
               >
-                <span className="font-bold text-xs text-slate-900 block">Faculty Roster</span>
-                <span className="text-[11px] text-slate-500 block">staff_import_template.csv</span>
+                <span className="font-bold text-xs text-slate-900 dark:text-slate-100 block">Faculty Roster</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">staff_import_template.csv</span>
               </button>
 
               <button
                 onClick={() => handleDownloadCsvTemplate('subject')}
-                className="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-left transition-colors space-y-1"
+                className="p-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-lg text-left transition-colors space-y-1 cursor-pointer"
               >
-                <span className="font-bold text-xs text-slate-900 block">Subject Catalog</span>
-                <span className="text-[11px] text-slate-500 block">subject_import_template.csv</span>
+                <span className="font-bold text-xs text-slate-900 dark:text-slate-100 block">Subject Catalog</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">subject_import_template.csv</span>
               </button>
 
               <button
                 onClick={() => handleDownloadCsvTemplate('class')}
-                className="p-3 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg text-left transition-colors space-y-1"
+                className="p-3 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 border border-slate-200 dark:border-slate-700 rounded-lg text-left transition-colors space-y-1 cursor-pointer"
               >
-                <span className="font-bold text-xs text-slate-900 block">Class Sections</span>
-                <span className="text-[11px] text-slate-500 block">class_import_template.csv</span>
+                <span className="font-bold text-xs text-slate-900 dark:text-slate-100 block">Class Sections</span>
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 block">class_import_template.csv</span>
               </button>
             </div>
           </div>
 
           {/* Section 3: Reset & Clear (Start Fresh for New Academic Use) */}
-          <div className="p-4 bg-rose-50/60 rounded-xl border border-rose-200/80 space-y-3">
-            <h4 className="font-bold text-xs uppercase tracking-wider text-rose-900 flex items-center gap-2">
-              <Trash2 className="w-4 h-4 text-rose-600" />
+          <div className="p-4 bg-rose-50/60 dark:bg-rose-950/40 rounded-xl border border-rose-200/80 dark:border-rose-900/60 space-y-3">
+            <h4 className="font-bold text-xs uppercase tracking-wider text-rose-900 dark:text-rose-300 flex items-center gap-2">
+              <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400" />
               <span>Reset & Start Fresh Slate</span>
             </h4>
-            <p className="text-xs text-rose-800/90 leading-relaxed">
+            <p className="text-xs text-rose-800/90 dark:text-rose-300/90 leading-relaxed">
               Clear previous demo schedules or wipe all entries to set up a brand new college timetable with your own custom faculty, subjects, and classes.
             </p>
 
@@ -260,9 +260,9 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                       message: 'Timetable allocations cleared. Faculty, subjects, and classes were retained.',
                     });
                   }}
-                  className="px-3.5 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                  className="px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                 >
-                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                   <span>Clear Timetable Slots Only</span>
                 </button>
               )}
@@ -272,14 +272,14 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                   {!confirmWipe ? (
                     <button
                       onClick={() => setConfirmWipe(true)}
-                      className="px-3.5 py-2 text-xs font-semibold text-rose-700 bg-white hover:bg-rose-100 border border-rose-300 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-2 text-xs font-semibold text-rose-700 dark:text-rose-300 bg-white dark:bg-slate-800 hover:bg-rose-100 dark:hover:bg-rose-950/60 border border-rose-300 dark:border-rose-700 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
                     >
-                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                      <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
                       <span>Wipe All & Start Fresh</span>
                     </button>
                   ) : (
-                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-rose-300">
-                      <span className="text-xs font-bold text-rose-700">Are you sure?</span>
+                    <div className="flex items-center gap-2 bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-rose-300 dark:border-rose-700">
+                      <span className="text-xs font-bold text-rose-700 dark:text-rose-300">Are you sure?</span>
                       <button
                         onClick={() => {
                           onWipeAllData();
@@ -295,7 +295,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                       </button>
                       <button
                         onClick={() => setConfirmWipe(false)}
-                        className="px-2 py-1 text-[11px] font-medium text-slate-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
+                        className="px-2 py-1 text-[11px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors cursor-pointer"
                       >
                         Cancel
                       </button>
@@ -307,10 +307,10 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
           </div>
         </div>
 
-        <div className="px-6 py-3 border-t border-slate-200 bg-slate-50 flex items-center justify-end">
+        <div className="px-6 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 flex items-center justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200 bg-slate-100 rounded-lg transition-colors"
+            className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 bg-slate-100 dark:bg-slate-800 rounded-lg transition-colors cursor-pointer"
           >
             Close
           </button>

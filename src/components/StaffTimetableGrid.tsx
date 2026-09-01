@@ -81,12 +81,12 @@ export const StaffTimetableGrid: React.FC<StaffTimetableGridProps> = ({
   if (staffList.length === 0) {
     return (
       <div id="staff-timetable-view" className="p-6 max-w-7xl mx-auto">
-        <div className="bg-white rounded-xl border border-dashed border-slate-300 p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-800 p-12 text-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
             <User className="w-6 h-6" />
           </div>
-          <h3 className="text-sm font-bold text-slate-800">No Faculty Members Available</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
+          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">No Faculty Members Available</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
             Please add faculty members from the Faculty tab to view their personal timetables and workload distribution.
           </p>
         </div>
@@ -97,10 +97,10 @@ export const StaffTimetableGrid: React.FC<StaffTimetableGridProps> = ({
   return (
     <div id="staff-timetable-view" className="p-6 space-y-6 max-w-7xl mx-auto">
       {/* Top Filter & Toolbar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-wrap items-center justify-between gap-4 print:hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs flex flex-wrap items-center justify-between gap-4 print:hidden transition-colors">
         <div className="flex flex-wrap items-center gap-3">
           <div>
-            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+            <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
               Filter Department
             </label>
             <select
@@ -112,7 +112,7 @@ export const StaffTimetableGrid: React.FC<StaffTimetableGridProps> = ({
                 );
                 if (first) setSelectedStaffId(first.id);
               }}
-              className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 bg-white text-slate-700 font-medium"
+              className="px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium cursor-pointer"
             >
               <option value="ALL">All Departments</option>
               {departments.map((d) => (
@@ -124,14 +124,14 @@ export const StaffTimetableGrid: React.FC<StaffTimetableGridProps> = ({
           </div>
 
           <div>
-            <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
+            <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
               Select Faculty Member
             </label>
             <select
               id="staff-selector"
               value={activeStaff?.id || ''}
               onChange={(e) => setSelectedStaffId(e.target.value)}
-              className="px-3 py-1.5 text-xs rounded-lg border border-indigo-300 bg-indigo-50/50 text-indigo-900 font-bold focus:ring-2 focus:ring-indigo-500"
+              className="px-3 py-1.5 text-xs rounded-lg border border-indigo-300 dark:border-indigo-700 bg-indigo-50/50 dark:bg-indigo-950/60 text-indigo-900 dark:text-indigo-200 font-bold focus:ring-2 focus:ring-indigo-500 cursor-pointer"
             >
               {filteredStaff.map((s) => (
                 <option key={s.id} value={s.id}>
@@ -146,15 +146,15 @@ export const StaffTimetableGrid: React.FC<StaffTimetableGridProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={handleExportExcel}
-            className="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5"
+            className="px-3.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
             title="Export Excel Worksheet (.xlsx)"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
             <span>Excel</span>
           </button>
           <button
             onClick={handleExportCsv}
-            className="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5"
+            className="px-3.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
             title="Export CSV"
           >
             <Download className="w-3.5 h-3.5 text-slate-400" />
@@ -162,7 +162,7 @@ export const StaffTimetableGrid: React.FC<StaffTimetableGridProps> = ({
           </button>
           <button
             onClick={handleExportPdf}
-            className="px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5"
+            className="px-3.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
             title="Export PDF"
           >
             <FileText className="w-3.5 h-3.5 text-rose-500" />
@@ -170,7 +170,7 @@ export const StaffTimetableGrid: React.FC<StaffTimetableGridProps> = ({
           </button>
           <button
             onClick={handlePrint}
-            className="px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5"
+            className="px-3.5 py-1.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg transition-colors shadow-2xs flex items-center gap-1.5 cursor-pointer"
             title="Print Schedule"
           >
             <Printer className="w-3.5 h-3.5 text-slate-300" />
@@ -181,30 +181,30 @@ export const StaffTimetableGrid: React.FC<StaffTimetableGridProps> = ({
 
       {/* Staff Timetable Card Canvas */}
       {activeStaff ? (
-        <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-xs space-y-4 print:border-none print:shadow-none print:p-0">
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4 print:border-none print:shadow-none print:p-0 transition-colors">
           {/* Header on Printable View */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                   <User className="w-4 h-4" />
                 </div>
-                <h3 className="text-base font-bold text-slate-900 tracking-tight">{activeStaff.name} Schedule</h3>
+                <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">{activeStaff.name} Schedule</h3>
               </div>
-              <p className="text-xs text-slate-500 mt-1">
-                {activeStaff.designation} • <span className="font-medium text-slate-700">{activeStaff.department}</span> • Cap: <span className="font-medium text-slate-700">{activeStaff.maxPeriodsPerWeek} p/wk</span>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                {activeStaff.designation} • <span className="font-medium text-slate-700 dark:text-slate-300">{activeStaff.department}</span> • Cap: <span className="font-medium text-slate-700 dark:text-slate-300">{activeStaff.maxPeriodsPerWeek} p/wk</span>
               </p>
             </div>
 
             {/* Workload Progress Badge */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center gap-4 text-xs">
+            <div className="bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl p-3 flex items-center gap-4 text-xs">
               <div>
-                <span className="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">Load Balance</span>
-                <span className="font-bold text-slate-900">
+                <span className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase block tracking-wider">Load Balance</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100">
                   {assignedCount} / {maxWorkload} periods ({workloadPct}%)
                 </span>
               </div>
-              <div className="w-24 bg-slate-200 rounded-full h-1.5 overflow-hidden">
+              <div className="w-24 bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all ${
                     assignedCount > maxWorkload
@@ -220,28 +220,28 @@ export const StaffTimetableGrid: React.FC<StaffTimetableGridProps> = ({
           </div>
 
           {/* Clean Minimalism Responsive Table Grid */}
-          <div className="overflow-x-auto rounded-xl border border-slate-200 shadow-2xs">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-2xs">
             <table className="w-full text-xs text-center border-collapse">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="p-3 text-left w-28 border-r border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                <tr className="bg-slate-50 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800">
+                  <th className="p-3 text-left w-28 border-r border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">
                     Day / Per
                   </th>
                   {computePeriodTimeRanges(scheduleConfig).map((slotInfo) => {
                     const p = slotInfo.period;
                     return (
-                      <th key={p} className="p-2.5 border-r border-slate-200 last:border-r-0 min-w-[110px]">
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">P{p}</p>
-                        <p className="text-[10px] text-slate-500 font-normal">{slotInfo.timeRange}</p>
+                      <th key={p} className="p-2.5 border-r border-slate-200 dark:border-slate-800 last:border-r-0 min-w-[110px]">
+                        <p className="text-[10px] text-slate-400 dark:text-slate-400 font-bold uppercase tracking-wider">P{p}</p>
+                        <p className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">{slotInfo.timeRange}</p>
                       </th>
                     );
                   })}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {scheduleConfig.workingDays.map((day) => (
-                  <tr key={day} className="hover:bg-slate-50/40 transition-colors">
-                    <td className="p-3 text-left font-bold text-slate-700 bg-slate-50/60 border-r border-slate-200">
+                  <tr key={day} className="hover:bg-slate-50/40 dark:hover:bg-slate-800/40 transition-colors">
+                    <td className="p-3 text-left font-bold text-slate-700 dark:text-slate-300 bg-slate-50/60 dark:bg-slate-800/40 border-r border-slate-200 dark:border-slate-800">
                       {day.slice(0, 3).toUpperCase()}
                     </td>
                     {Array.from({ length: scheduleConfig.periodsPerDay }, (_, i) => {
@@ -256,37 +256,37 @@ export const StaffTimetableGrid: React.FC<StaffTimetableGridProps> = ({
                       return (
                         <td
                           key={p}
-                          className={`p-3 border-r border-slate-200 last:border-r-0 align-top transition-colors ${
+                          className={`p-3 border-r border-slate-200 dark:border-slate-800 last:border-r-0 align-top transition-colors ${
                             isUnavailable
-                              ? 'bg-rose-50/30'
+                              ? 'bg-rose-50/30 dark:bg-rose-950/30'
                               : entry
-                              ? 'bg-white'
-                              : 'bg-slate-50/10'
+                              ? 'bg-white dark:bg-slate-900'
+                              : 'bg-slate-50/10 dark:bg-slate-900/20'
                           }`}
                         >
                           {entry ? (
                             <div className="text-left space-y-0.5">
                               <div className="flex items-center justify-between">
-                                <p className="font-bold text-xs text-slate-900">{cls?.name || entry.classId}</p>
-                                <span className="text-[10px] font-semibold text-indigo-700">
+                                <p className="font-bold text-xs text-slate-900 dark:text-slate-100">{cls?.name || entry.classId}</p>
+                                <span className="text-[10px] font-semibold text-indigo-700 dark:text-indigo-400">
                                   {sub?.code}
                                 </span>
                               </div>
-                              <p className="text-[10px] text-slate-500 truncate" title={sub?.name}>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate" title={sub?.name}>
                                 {sub?.name}
                               </p>
                               {entry.room && (
-                                <p className="text-[9px] text-slate-400 truncate">
+                                <p className="text-[9px] text-slate-400 dark:text-slate-500 truncate">
                                   {entry.room}
                                 </p>
                               )}
                             </div>
                           ) : isUnavailable ? (
-                            <div className="h-10 flex items-center justify-center text-[10px] text-rose-500 font-bold uppercase tracking-wider">
+                            <div className="h-10 flex items-center justify-center text-[10px] text-rose-500 dark:text-rose-400 font-bold uppercase tracking-wider">
                               Unavailable
                             </div>
                           ) : (
-                            <div className="h-10 flex items-center justify-center text-[10px] text-slate-300 font-bold uppercase tracking-wider">
+                            <div className="h-10 flex items-center justify-center text-[10px] text-slate-300 dark:text-slate-600 font-bold uppercase tracking-wider">
                               Free
                             </div>
                           )}

@@ -249,12 +249,12 @@ export class ConflictDetector {
       }
     }
 
-    // 7. LAB CONSECUTIVE PERIODS CHECK
+    // 7. CONSECUTIVE PERIODS CHECK (Labs / Naan Mudhalvan skill blocks)
     for (const cls of classesList) {
       const classEntries = entries.filter((e) => e.classId === cls.id);
       for (const req of cls.subjects) {
         const subject = subjectMap.get(req.subjectId);
-        if (subject?.type === 'Lab' && subject.consecutivePeriodsRequired > 1) {
+        if (subject && subject.consecutivePeriodsRequired > 1) {
           const subEntries = classEntries.filter((e) => e.subjectId === req.subjectId);
           // Group by day
           const dayGroups = new Map<string, number[]>();
@@ -271,7 +271,7 @@ export class ConflictDetector {
                 id: `conflict-lab-consec-${cls.id}-${req.subjectId}-${day}`,
                 type: 'LAB_CONSECUTIVE_VIOLATION',
                 severity: 'WARNING',
-                title: `Lab Split: ${subject.name} in ${cls.name}`,
+                title: `Consecutive Block Split: ${subject.name} in ${cls.name}`,
                 description: `${subject.name} on ${day} is scheduled as a single period (P${periods[0]}), but requires ${subject.consecutivePeriodsRequired} consecutive periods.`,
                 day: day as any,
                 classId: cls.id,

@@ -37,6 +37,8 @@ interface SidebarProps {
   isFeasible?: boolean;
   isOpen?: boolean;
   onClose?: () => void;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({
@@ -46,6 +48,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isFeasible = true,
   isOpen = false,
   onClose,
+  theme = 'dark',
+  onToggleTheme,
 }) => {
   const menuItems: { id: ActiveTab; label: string; icon: React.ReactNode; badge?: number | string; badgeColor?: string }[] = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -90,21 +94,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Main Sidebar (Fixed overlay on mobile, static on md+ screens) */}
       <aside
         id="app-sidebar"
-        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col shrink-0 select-none shadow-xl md:shadow-none transition-transform duration-200 ease-in-out md:static md:w-64 md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-72 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col shrink-0 select-none shadow-xl md:shadow-none transition-all duration-200 ease-in-out md:static md:w-64 md:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Brand Header */}
-        <div className="p-5 md:p-6 border-b border-slate-100 flex items-center justify-between">
+        <div className="p-5 md:p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold italic text-lg shadow-xs shadow-indigo-200">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold italic text-lg shadow-xs shadow-indigo-200 dark:shadow-none">
               S
             </div>
             <div>
-              <h1 className="font-bold text-base tracking-tight text-indigo-950 leading-none">
-                SMART <span className="font-light text-indigo-600">TIME</span>
+              <h1 className="font-bold text-base tracking-tight text-indigo-950 dark:text-indigo-100 leading-none">
+                SMART <span className="font-light text-indigo-600 dark:text-indigo-400">TIME</span>
               </h1>
-              <p className="text-[10px] text-slate-400 font-medium tracking-widest uppercase mt-1">
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium tracking-widest uppercase mt-1">
                 Academic Generator
               </p>
             </div>
@@ -114,7 +118,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <button
             id="btn-close-mobile-sidebar"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 md:hidden transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 md:hidden transition-colors"
             title="Close menu"
             aria-label="Close menu"
           >
@@ -124,7 +128,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Navigation Links */}
         <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="px-3 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Core Modules
           </div>
           {menuItems.slice(0, 5).map((item) => {
@@ -136,19 +140,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => handleSelectTab(item.id)}
                 className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer ${
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700 font-semibold'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 font-medium'
+                    ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className={isActive ? 'text-indigo-600' : 'text-slate-400'}>{item.icon}</span>
+                  <span className={isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}>
+                    {item.icon}
+                  </span>
                   <span>{item.label}</span>
                 </div>
               </button>
             );
           })}
 
-          <div className="px-3 pt-4 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="px-3 pt-4 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Optimizer & Constraints
           </div>
           {menuItems.slice(5, 9).map((item) => {
@@ -160,18 +166,20 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => handleSelectTab(item.id)}
                 className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer ${
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700 font-semibold'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 font-medium'
+                    ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className={isActive ? 'text-indigo-600' : 'text-slate-400'}>{item.icon}</span>
+                  <span className={isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}>
+                    {item.icon}
+                  </span>
                   <span>{item.label}</span>
                 </div>
                 {item.badge !== undefined && (
                   <span
                     className={`px-1.5 py-0.5 text-[10px] font-bold rounded ${
-                      item.badgeColor || 'bg-indigo-100 text-indigo-700'
+                      item.badgeColor || 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300'
                     }`}
                   >
                     {item.badge}
@@ -181,7 +189,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             );
           })}
 
-          <div className="px-3 pt-4 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+          <div className="px-3 pt-4 pb-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Reports & Views
           </div>
           {menuItems.slice(9).map((item) => {
@@ -193,12 +201,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 onClick={() => handleSelectTab(item.id)}
                 className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors cursor-pointer ${
                   isActive
-                    ? 'bg-indigo-50 text-indigo-700 font-semibold'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50 font-medium'
+                    ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-semibold'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className={isActive ? 'text-indigo-600' : 'text-slate-400'}>{item.icon}</span>
+                  <span className={isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-slate-500'}>
+                    {item.icon}
+                  </span>
                   <span>{item.label}</span>
                 </div>
               </button>
@@ -207,14 +217,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </nav>
 
         {/* Current Session Info Card */}
-        <div className="p-4 border-t border-slate-100">
-          <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+          <div className="bg-slate-50 dark:bg-slate-800/60 p-3 rounded-lg border border-slate-100 dark:border-slate-700/60">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Session</p>
+              <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Current Session</p>
               <ShieldCheck className={`w-3.5 h-3.5 ${isFeasible ? 'text-emerald-500' : 'text-amber-500'}`} />
             </div>
-            <p className="text-xs font-semibold text-slate-800">Academic Year 2024–25</p>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">Academic Year 2024–25</p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
               {conflictCount === 0 ? 'Optimal & Conflict-free' : `${conflictCount} conflict(s) detected`}
             </p>
           </div>
