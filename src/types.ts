@@ -33,6 +33,13 @@ export interface Staff {
   maxConsecutivePeriods?: number; // default e.g. 3
 }
 
+export interface SubjectFixedSchedule {
+  enabled: boolean;
+  day: DayOfWeek;
+  startPeriod: number; // e.g. 5
+  consecutivePeriods?: number; // e.g. 4
+}
+
 export interface Subject {
   id: string;
   code: string;
@@ -42,12 +49,15 @@ export interface Subject {
   eligibleStaffIds: string[];
   consecutivePeriodsRequired: number; // 1 for normal theory, 2 for lab, 3 for extended lab, 4 for Naan Mudhalvan / skill block
   roomRequired?: string; // e.g. "Lab 1", "Room 302"
+  isNaanMudhalvan?: boolean; // Naan Mudhalvan Tamil Nadu Skill Development Program
+  fixedSchedule?: SubjectFixedSchedule; // User-configured designated day and period block (never shuffled)
 }
 
 export interface ClassSubjectRequirement {
   subjectId: string;
   periodsPerWeek: number;
   preferredStaffId?: string;
+  fixedSchedule?: SubjectFixedSchedule; // Class-specific override for fixed day/periods
 }
 
 export interface ClassInfo {

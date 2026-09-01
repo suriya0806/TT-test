@@ -10,8 +10,13 @@ import {
   X,
   Check,
   FlaskConical,
+  Sparkles,
+  Lock,
+  Calendar,
+  Clock,
 } from 'lucide-react';
-import { Staff, Subject, SubjectType } from '../types';
+import { DayOfWeek, Staff, Subject, SubjectFixedSchedule, SubjectType } from '../types';
+import { isNaanMudhalvanSubject } from '../utils/naanMudhalvanHelper';
 
 interface SubjectViewProps {
   subjectsList: Subject[];
@@ -47,6 +52,12 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
   const [formConsecutive, setFormConsecutive] = useState<number | string>(1);
   const [formRoom, setFormRoom] = useState('');
 
+  // Naan Mudhalvan & Fixed Schedule Fields
+  const [formIsNaanMudhalvan, setFormIsNaanMudhalvan] = useState<boolean>(false);
+  const [formFixedDay, setFormFixedDay] = useState<DayOfWeek>('Friday');
+  const [formFixedStartPeriod, setFormFixedStartPeriod] = useState<number>(5);
+  const [formFixedConsecutive, setFormFixedConsecutive] = useState<number>(4);
+
   const filteredSubjects = subjectsList.filter((s) => {
     const matchesSearch =
       s.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -65,6 +76,10 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
     setFormEligibleStaffIds([]);
     setFormConsecutive(1);
     setFormRoom('LH-101');
+    setFormIsNaanMudhalvan(false);
+    setFormFixedDay('Friday');
+    setFormFixedStartPeriod(5);
+    setFormFixedConsecutive(4);
     setIsModalOpen(true);
   };
 
@@ -84,6 +99,12 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
     setFormEligibleStaffIds(combinedEligibleStaff);
     setFormConsecutive(sub.consecutivePeriodsRequired || 1);
     setFormRoom(sub.roomRequired || '');
+
+    const isNM = isNaanMudhalvanSubject(sub);
+    setFormIsNaanMudhalvan(isNM);
+    setFormFixedDay(sub.fixedSchedule?.day || 'Friday');
+    setFormFixedStartPeriod(sub.fixedSchedule?.startPeriod || (sub.type === 'Lab' ? 5 : 1));
+    setFormFixedConsecutive(sub.fixedSchedule?.consecutivePeriods || sub.consecutivePeriodsRequired || 4);
     setIsModalOpen(true);
   };
 
@@ -97,17 +118,55 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
     setFormType(type);
     if (type === 'Lab') {
       setFormConsecutive(2);
-      if (formRequiredPeriods === 4) setFormRequiredPeriods(2);
+      if (formRequiredPeriods === 4 && !formIsNaanMudhalvan) setFormRequiredPeriods(2);
       if (!formRoom || formRoom.startsWith('LH-')) setFormRoom('Specialized Lab');
     } else {
       setFormConsecutive(1);
-      if (formRequiredPeriods === 2) setFormRequiredPeriods(4);
+      if (formRequiredPeriods === 2 && !formIsNaanMudhalvan) setFormRequiredPeriods(4);
+    }
+  };
+
+  const handleNameChange = (val: string) => {
+    setFormName(val);
+    const lower = val.toLowerCase();
+    if (lower.includes('naan mudhalvan') || lower.includes('naanmudhalvan') || lower.includes('naan mudalvan')) {
+      setFormIsNaanMudhalvan(true);
+      setFormConsecutive(4);
+      setFormRequiredPeriods(4);
+      setFormFixedConsecutive(4);
+    }
+  };
+
+  const handleCodeChange = (val: string) => {
+    setFormCode(val);
+    if (val.toUpperCase().startsWith('NM')) {
+      setFormIsNaanMudhalvan(true);
+      setFormConsecutive(4);
+      setFormRequiredPeriods(4);
+      setFormFixedConsecutive(4);
     }
   };
 
   const handleSaveSubject = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formCode.trim() || !formName.trim()) return;
+
+    const consecutiveValue = formIsNaanMudhalvan
+      ? Number(formFixedConsecutive) || 4
+      : formConsecutive === ''
+      ? 1
+      : Math.max(1, Number(formConsecutive) || 1);
+
+    const fixedScheduleData: SubjectFixedSchedule | undefined = formIsNaanMudhalvan
+      ? {
+          enabled: true,
+          day: formFixedDay,
+          startPeriod: Number(formFixedStartPeriod) || 5,
+          consecutivePeriods: consecutiveValue,
+        }
+      : editingSubject?.fixedSchedule?.enabled
+      ? editingSubject.fixedSchedule
+      : undefined;
 
     const subData: Subject = {
       id: formId,
@@ -116,8 +175,10 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
       type: formType,
       requiredPeriodsPerWeek: formRequiredPeriods === '' ? 4 : Math.max(1, Number(formRequiredPeriods) || 4),
       eligibleStaffIds: formEligibleStaffIds,
-      consecutivePeriodsRequired: formConsecutive === '' ? 1 : Math.max(1, Number(formConsecutive) || 1),
+      consecutivePeriodsRequired: consecutiveValue,
       roomRequired: formRoom.trim() || undefined,
+      isNaanMudhalvan: formIsNaanMudhalvan,
+      fixedSchedule: fixedScheduleData,
     };
 
     if (editingSubject) {
@@ -145,7 +206,7 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
         <div>
           <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Subject & Course Catalog</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Define Theory vs Lab courses, custom codes, weekly period loads, block requirements, and eligible faculty.
+            Define Theory, Labs, Naan Mudhalvan skill blocks, weekly period loads, user-fixed schedules, and eligible faculty.
           </p>
         </div>
 
@@ -198,81 +259,75 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'
             }`}
           >
-            All Types
+            All Types ({subjectsList.length})
           </button>
           <button
             onClick={() => setTypeFilter('Theory')}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border cursor-pointer ${
               typeFilter === 'Theory'
-                ? 'bg-indigo-600 text-white border-indigo-600 dark:bg-indigo-600 dark:border-indigo-500'
+                ? 'bg-indigo-600 text-white border-indigo-600'
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'
             }`}
           >
-            Theory Only
+            Theory ({subjectsList.filter((s) => s.type === 'Theory').length})
           </button>
           <button
             onClick={() => setTypeFilter('Lab')}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors border cursor-pointer ${
               typeFilter === 'Lab'
-                ? 'bg-purple-600 text-white border-purple-600 dark:bg-purple-600 dark:border-purple-500'
+                ? 'bg-purple-600 text-white border-purple-600'
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700'
             }`}
           >
-            Labs Only
+            Labs ({subjectsList.filter((s) => s.type === 'Lab').length})
           </button>
         </div>
       </div>
 
-      {/* Empty State or Subjects Grid */}
+      {/* Subjects Grid */}
       {filteredSubjects.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
-            <BookOpen className="w-6 h-6" />
-          </div>
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-            {subjectsList.length === 0 ? 'No Subjects or Courses in Catalog' : 'No matching subjects found'}
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-            {subjectsList.length === 0
-              ? 'Add your institutional courses, lab practicals, electives, and seminar hours. All fields and parameters are fully editable.'
-              : 'Try adjusting your search query or type filters.'}
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center space-y-3">
+          <BookOpen className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
+          <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">No subjects found</h3>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            {searchTerm ? 'No subjects matched your filter.' : 'Get started by creating theory, lab, or Naan Mudhalvan courses.'}
           </p>
-          {subjectsList.length === 0 && (
-            <button
-              onClick={openAddModal}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Your First Subject</span>
-            </button>
-          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredSubjects.map((sub) => {
+            const isLab = sub.type === 'Lab';
+            const isNM = isNaanMudhalvanSubject(sub);
             const eligibleStaff = staffList.filter(
               (s) => (sub.eligibleStaffIds && sub.eligibleStaffIds.includes(s.id)) || (s.subjectIds && s.subjectIds.includes(sub.id))
             );
-            const isLab = sub.type === 'Lab';
+
+            const fixedDay = sub.fixedSchedule?.day || 'Friday';
+            const fixedStartP = sub.fixedSchedule?.startPeriod || (isLab ? 5 : 1);
+            const fixedCount = sub.fixedSchedule?.consecutivePeriods || sub.consecutivePeriodsRequired || 4;
+            const fixedEndP = fixedStartP + fixedCount - 1;
 
             return (
               <div
                 key={sub.id}
-                id={`subject-card-${sub.id}`}
-                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all space-y-4"
+                className={`bg-white dark:bg-slate-900 rounded-xl border p-5 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between ${
+                  isNM
+                    ? 'border-amber-300 dark:border-amber-700/80 bg-gradient-to-br from-amber-50/20 to-white dark:from-amber-950/20 dark:to-slate-900'
+                    : 'border-slate-200 dark:border-slate-800'
+                }`}
               >
                 <div>
-                  <div className="flex items-start justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-xs font-bold text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700">
                           {sub.code}
                         </span>
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase flex items-center gap-1 ${
+                          className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded flex items-center gap-1 ${
                             isLab
-                              ? 'bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800'
-                              : 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800'
+                              ? 'bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800'
+                              : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'
                           }`}
                         >
                           {isLab ? <FlaskConical className="w-3 h-3" /> : <BookOpen className="w-3 h-3" />}
@@ -307,6 +362,31 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
                     </div>
                   </div>
 
+                  {/* Naan Mudhalvan / Fixed Slot Pill */}
+                  {isNM && (
+                    <div className="mt-3 p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-900 dark:text-amber-300">
+                          <Sparkles className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                          <span>Naan Mudhalvan (User Fixed Slot)</span>
+                        </div>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-200/80 dark:bg-amber-900 text-amber-950 dark:text-amber-200">
+                          <Lock className="w-2.5 h-2.5" /> Locked from Shuffle
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 dark:text-amber-300/90 font-medium">
+                        Scheduled on <span className="font-bold underline">{fixedDay}</span> • Periods <span className="font-bold underline">P{fixedStartP} to P{fixedEndP}</span> ({fixedCount} periods)
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(sub)}
+                        className="text-[10px] font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-1 pt-0.5 cursor-pointer"
+                      >
+                        <Edit2 className="w-2.5 h-2.5" /> Change Day & Period
+                      </button>
+                    </div>
+                  )}
+
                   {/* Subject Metrics */}
                   <div className="mt-4 grid grid-cols-2 gap-2 text-xs bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
                     <div>
@@ -316,8 +396,8 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
                     <div>
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold">Consecutive</span>
                       <p className="font-semibold text-slate-800 dark:text-slate-200">
-                        {sub.consecutivePeriodsRequired === 4
-                          ? '4 periods block (Naan Mudhalvan)'
+                        {isNM
+                          ? `${sub.consecutivePeriodsRequired || 4} periods (Fixed Block)`
                           : sub.consecutivePeriodsRequired > 1
                           ? `${sub.consecutivePeriodsRequired} periods block`
                           : '1 period (Single)'}
@@ -376,8 +456,8 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
                     type="text"
                     required
                     value={formCode}
-                    onChange={(e) => setFormCode(e.target.value)}
-                    placeholder="e.g. CS601"
+                    onChange={(e) => handleCodeChange(e.target.value)}
+                    placeholder="e.g. CS601 or NM301"
                     className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden uppercase"
                   />
                 </div>
@@ -416,8 +496,8 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
                     type="text"
                     required
                     value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    placeholder="e.g. Artificial Intelligence"
+                    onChange={(e) => handleNameChange(e.target.value)}
+                    placeholder="e.g. Artificial Intelligence or Naan Mudhalvan Skill Course"
                     className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                   />
                 </div>
@@ -448,7 +528,7 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
                     <option value={1}>1 Period (Standard Theory)</option>
                     <option value={2}>2 Consecutive Periods (Standard Lab)</option>
                     <option value={3}>3 Consecutive Periods (Extended Lab)</option>
-                    <option value={4}>4 Consecutive Periods (Naan Mudhalvan)</option>
+                    <option value={4}>4 Consecutive Periods (Naan Mudhalvan Block)</option>
                   </select>
                 </div>
 
@@ -464,6 +544,101 @@ export const SubjectView: React.FC<SubjectViewProps> = ({
                     className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                   />
                 </div>
+              </div>
+
+              {/* Naan Mudhalvan / Fixed Slot Configuration */}
+              <div className="p-4 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/70 dark:bg-amber-950/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <div>
+                      <h4 className="text-xs font-bold text-amber-950 dark:text-amber-200">
+                        Naan Mudhalvan & Fixed User Schedule
+                      </h4>
+                      <p className="text-[11px] text-amber-800/80 dark:text-amber-300/80">
+                        Assign user-chosen day & period block. This subject will NEVER be shuffled when clicking shuffle.
+                      </p>
+                    </div>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formIsNaanMudhalvan}
+                      onChange={(e) => setFormIsNaanMudhalvan(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-slate-300 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+                  </label>
+                </div>
+
+                {formIsNaanMudhalvan && (
+                  <div className="pt-2 border-t border-amber-200 dark:border-amber-900/60 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-[11px] font-bold text-amber-950 dark:text-amber-200 mb-1 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" /> Designated Day
+                      </label>
+                      <select
+                        value={formFixedDay}
+                        onChange={(e) => setFormFixedDay(e.target.value as DayOfWeek)}
+                        className="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer"
+                      >
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-amber-950 dark:text-amber-200 mb-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> Starting Period
+                      </label>
+                      <select
+                        value={formFixedStartPeriod}
+                        onChange={(e) => setFormFixedStartPeriod(Number(e.target.value))}
+                        className="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer"
+                      >
+                        <option value={1}>Period 1 (Morning Start)</option>
+                        <option value={2}>Period 2</option>
+                        <option value={3}>Period 3</option>
+                        <option value={4}>Period 4</option>
+                        <option value={5}>Period 5 (Afternoon Start)</option>
+                        <option value={6}>Period 6</option>
+                        <option value={7}>Period 7</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[11px] font-bold text-amber-950 dark:text-amber-200 mb-1 flex items-center gap-1">
+                        <Layers className="w-3 h-3" /> Block Length
+                      </label>
+                      <select
+                        value={formFixedConsecutive}
+                        onChange={(e) => setFormFixedConsecutive(Number(e.target.value))}
+                        className="w-full px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-amber-300 dark:border-amber-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-hidden cursor-pointer"
+                      >
+                        <option value={2}>2 Periods Block</option>
+                        <option value={3}>3 Periods Block</option>
+                        <option value={4}>4 Periods Block (Standard NM)</option>
+                      </select>
+                    </div>
+
+                    <div className="sm:col-span-3 bg-white/70 dark:bg-slate-900/60 p-2 rounded-lg border border-amber-200/80 dark:border-amber-900/50 flex items-center justify-between text-xs">
+                      <span className="font-semibold text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+                        <Lock className="w-3 h-3 text-amber-600" />
+                        Fixed Slot: <span className="font-bold underline">{formFixedDay}</span> Periods{' '}
+                        <span className="font-bold underline">
+                          P{formFixedStartPeriod} to P{Number(formFixedStartPeriod) + Number(formFixedConsecutive) - 1}
+                        </span>
+                      </span>
+                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950 px-2 py-0.5 rounded">
+                        ✓ Protected from Shuffle
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Eligible Teachers Checklist */}

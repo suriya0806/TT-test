@@ -12,6 +12,11 @@ import {
   TimetableEntry,
 } from '../types';
 import { ConflictDetector } from './conflictDetector';
+import {
+  isNaanMudhalvanSubject,
+  getResolvedFixedSchedule,
+  isNaanMudhalvanEntry,
+} from '../utils/naanMudhalvanHelper';
 
 export class ConstraintSolver {
   /**
@@ -47,6 +52,11 @@ export class ConstraintSolver {
     let baseEntries: TimetableEntry[] = [];
     let changesCount = 0;
 
+    // RULE: Naan Mudhalvan & User-Locked Entries are ALWAYS PRESERVED from being shuffled or wiped!
+    const existingNaanOrLockedEntries = existingEntries.filter(
+      (e) => isNaanMudhalvanEntry(e, subjectsList) || e.isLocked
+    );
+
     if (options.mode === 'COMPLETE_EXISTING' && existingEntries.length > 0) {
       // Validate existing entries, purge true conflicts (like teacher clash / class clash / illegal eligibility),
       // and preserve all valid assignments.
@@ -75,6 +85,59 @@ export class ConstraintSolver {
 
       baseEntries = existingEntries.filter((e) => !conflictingEntryIds.has(e.id));
       changesCount = conflictingEntryIds.size;
+    } else {
+      // IN "NEW_TIMETABLE" OR "SHUFFLE" MODE:
+      // Naan Mudhalvan slots are strictly retained and locked in place!
+      baseEntries = existingNaanOrLockedEntries.map((e) => ({ ...e, isLocked: true }));
+    }
+
+    // ENSURE ALL CLASSES WITH NAAN MUDHALVAN (OR FIXED USER SCHEDULES) HAVE THEM ALLOCATED AT USER DESIGNATED DAY & PERIOD
+    for (const cls of classesList) {
+      for (const req of cls.subjects) {
+        const subject = subjectMap.get(req.subjectId);
+        if (subject && isNaanMudhalvanSubject(subject)) {
+          const fixedSched = getResolvedFixedSchedule(subject, req, scheduleConfig);
+          const alreadyAssigned = baseEntries.filter(
+            (e) => e.classId === cls.id && e.subjectId === subject.id
+          );
+
+          // If not assigned yet, or if subject has an explicit fixed schedule and entries don't match the scheduled day/period
+          if (alreadyAssigned.length === 0 && fixedSched && fixedSched.enabled) {
+            const day = fixedSched.day;
+            const consecutive = fixedSched.consecutivePeriods || subject.consecutivePeriodsRequired || req.periodsPerWeek || 4;
+            const startP = Math.min(
+              Math.max(1, fixedSched.startPeriod),
+              Math.max(1, periodsPerDay - consecutive + 1)
+            );
+
+            // Find best eligible teacher
+            const eligible = staffList.filter(
+              (s) =>
+                (subject.eligibleStaffIds && subject.eligibleStaffIds.includes(s.id)) ||
+                (s.subjectIds && s.subjectIds.includes(subject.id))
+            );
+            const teacher =
+              (req.preferredStaffId && staffMap.get(req.preferredStaffId)) ||
+              eligible[0] ||
+              staffList[0];
+
+            if (teacher) {
+              for (let p = startP; p < startP + consecutive && p <= periodsPerDay; p++) {
+                baseEntries.push({
+                  id: `entry-nm-${cls.id}-${day}-p${p}-${Math.random().toString(36).slice(2, 6)}`,
+                  classId: cls.id,
+                  subjectId: subject.id,
+                  staffId: teacher.id,
+                  day,
+                  period: p,
+                  room: subject.roomRequired || cls.room || 'Seminar Hall / Lab',
+                  isLocked: true, // STRICTLY LOCKED: NEVER SHUFFLED
+                });
+              }
+            }
+          }
+        }
+      }
     }
 
     // Run Constraint Solving Algorithm

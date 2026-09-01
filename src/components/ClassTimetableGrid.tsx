@@ -15,6 +15,7 @@ import {
   Trash2,
   X,
   Check,
+  Sparkles,
 } from 'lucide-react';
 import {
   ClassInfo,
@@ -26,6 +27,7 @@ import {
 } from '../types';
 import { ExportService } from '../services/exportService';
 import { computePeriodTimeRanges } from '../utils/scheduleHelper';
+import { isNaanMudhalvanSubject } from '../utils/naanMudhalvanHelper';
 
 interface ClassTimetableGridProps {
   classesList: ClassInfo[];
@@ -302,6 +304,7 @@ export const ClassTimetableGrid: React.FC<ClassTimetableGridProps> = ({
                       const sub = entry ? subjectMap.get(entry.subjectId) : null;
                       const staff = entry ? staffMap.get(entry.staffId) : null;
                       const isLab = sub?.type === 'Lab';
+                      const isNM = isNaanMudhalvanSubject(sub);
 
                       return (
                         <td
@@ -309,7 +312,9 @@ export const ClassTimetableGrid: React.FC<ClassTimetableGridProps> = ({
                           onClick={() => openSlotEdit(day, p, entry)}
                           className={`p-3 border-r border-slate-200 dark:border-slate-800 last:border-r-0 align-top transition-all cursor-pointer hover:ring-2 hover:ring-indigo-400 hover:z-10 ${
                             entry
-                              ? isLab
+                              ? isNM
+                                ? 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700/80'
+                                : isLab
                                 ? 'bg-indigo-50/30 dark:bg-indigo-950/30'
                                 : 'bg-white dark:bg-slate-900'
                               : 'bg-slate-50/10 dark:bg-slate-900/20 hover:bg-slate-100/50 dark:hover:bg-slate-800/50'
@@ -321,18 +326,31 @@ export const ClassTimetableGrid: React.FC<ClassTimetableGridProps> = ({
                               <div className="flex items-start justify-between gap-1">
                                 <p
                                   className={`font-bold text-xs leading-tight line-clamp-2 ${
-                                    isLab ? 'text-indigo-700 dark:text-indigo-400' : 'text-slate-900 dark:text-slate-100'
+                                    isNM
+                                      ? 'text-amber-950 dark:text-amber-200'
+                                      : isLab
+                                      ? 'text-indigo-700 dark:text-indigo-400'
+                                      : 'text-slate-900 dark:text-slate-100'
                                   }`}
                                   title={sub?.name || sub?.code || entry.subjectId}
                                 >
                                   {sub?.name || sub?.code || entry.subjectId}
                                 </p>
                                 <div className="flex items-center gap-0.5 shrink-0 mt-0.5">
-                                  {entry.isLocked && <Lock className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />}
-                                  {isLab && (
-                                    <span className="text-[9px] font-bold uppercase px-1 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
-                                      LAB
+                                  {isNM ? (
+                                    <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-200/90 dark:bg-amber-900 text-amber-950 dark:text-amber-200 flex items-center gap-0.5">
+                                      <Lock className="w-2.5 h-2.5 text-amber-800 dark:text-amber-300" />
+                                      NM
                                     </span>
+                                  ) : (
+                                    <>
+                                      {entry.isLocked && <Lock className="w-2.5 h-2.5 text-amber-600 dark:text-amber-400" />}
+                                      {isLab && (
+                                        <span className="text-[9px] font-bold uppercase px-1 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300">
+                                          LAB
+                                        </span>
+                                      )}
+                                    </>
                                   )}
                                 </div>
                               </div>
@@ -380,6 +398,14 @@ export const ClassTimetableGrid: React.FC<ClassTimetableGridProps> = ({
             </div>
 
             <form onSubmit={handleSaveSlot} className="p-5 space-y-4 text-xs">
+              {isNaanMudhalvanSubject(subjectsList.find((s) => s.id === slotSubjectId)) && (
+                <div className="p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/80 flex items-center gap-2 text-amber-950 dark:text-amber-200 font-medium text-[11px]">
+                  <Sparkles className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <span>
+                    ⭐ <strong>Naan Mudhalvan Slot</strong>: User-assigned day and periods are protected and will not be shuffled.
+                  </span>
+                </div>
+              )}
               <div>
                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Subject</label>
                 <select

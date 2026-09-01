@@ -12,8 +12,11 @@ import {
   Check,
   Building,
   AlertTriangle,
+  Sparkles,
+  Lock,
 } from 'lucide-react';
 import { ClassInfo, ClassSubjectRequirement, ScheduleConfig, Subject } from '../types';
+import { getResolvedFixedSchedule, isNaanMudhalvanSubject } from '../utils/naanMudhalvanHelper';
 
 interface ClassViewProps {
   classesList: ClassInfo[];
@@ -47,7 +50,7 @@ export const ClassView: React.FC<ClassViewProps> = ({
   const [formSection, setFormSection] = useState('A');
   const [formName, setFormName] = useState('');
   const [formRoom, setFormRoom] = useState('');
-  const [formSubjects, setFormSubjects] = useState<{ subjectId: string; periodsPerWeek: number | string }[]>([]);
+  const [formSubjects, setFormSubjects] = useState<ClassSubjectRequirement[]>([]);
 
   const totalSlotsPerClass = scheduleConfig.workingDays.length * scheduleConfig.periodsPerDay;
 
@@ -76,7 +79,14 @@ export const ClassView: React.FC<ClassViewProps> = ({
     setFormSection(c.section);
     setFormName(c.name);
     setFormRoom(c.room || '');
-    setFormSubjects(c.subjects.map((s) => ({ subjectId: s.subjectId, periodsPerWeek: s.periodsPerWeek })) || []);
+    setFormSubjects(
+      c.subjects.map((s) => ({
+        subjectId: s.subjectId,
+        periodsPerWeek: s.periodsPerWeek,
+        preferredStaffId: s.preferredStaffId,
+        fixedSchedule: s.fixedSchedule,
+      })) || []
+    );
     setIsModalOpen(true);
   };
 
@@ -99,42 +109,54 @@ export const ClassView: React.FC<ClassViewProps> = ({
       ? 'IT'
       : dept.includes('Electrical')
       ? 'ECE'
-      : dept.split(' ')[0] || 'CLASS';
+      : dept.includes('Mechanical')
+      ? 'MECH'
+      : dept.includes('Civil')
+      ? 'CIVIL'
+      : dept.slice(0, 4).toUpperCase();
     setFormName(`${deptPrefix} ${year} ${sec}`.trim());
   };
 
-  const toggleSubjectRequirement = (subject: Subject) => {
-    const exists = formSubjects.find((s) => s.subjectId === subject.id);
-    if (exists) {
-      setFormSubjects((prev) => prev.filter((s) => s.subjectId !== subject.id));
+  const toggleSubjectRequirement = (sub: Subject) => {
+    const isNM = isNaanMudhalvanSubject(sub);
+    const existing = formSubjects.find((s) => s.subjectId === sub.id);
+    if (existing) {
+      setFormSubjects(formSubjects.filter((s) => s.subjectId !== sub.id));
     } else {
-      setFormSubjects((prev) => [
-        ...prev,
-        { subjectId: subject.id, periodsPerWeek: subject.requiredPeriodsPerWeek || 4 },
+      setFormSubjects([
+        ...formSubjects,
+        {
+          subjectId: sub.id,
+          periodsPerWeek: isNM ? (sub.consecutivePeriodsRequired || 4) : sub.requiredPeriodsPerWeek || 4,
+          fixedSchedule: sub.fixedSchedule,
+        },
       ]);
     }
   };
 
   const updateSubjectPeriods = (subjectId: string, periods: number | string) => {
-    setFormSubjects((prev) =>
-      prev.map((s) => (s.subjectId === subjectId ? { ...s, periodsPerWeek: periods } : s))
+    const parsed = periods === '' ? 1 : Math.max(1, Number(periods) || 1);
+    setFormSubjects(
+      formSubjects.map((s) => (s.subjectId === subjectId ? { ...s, periodsPerWeek: parsed } : s))
     );
   };
 
   const handleSaveClass = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formName.trim()) return;
+    if (!formName.trim() || !formDept.trim()) return;
 
     const classData: ClassInfo = {
       id: formId,
-      department: formDept.trim() || 'General',
-      year: formYear.trim() || '1',
-      section: formSection.trim() || 'A',
+      department: formDept.trim(),
+      year: formYear,
+      section: formSection.trim().toUpperCase(),
       name: formName.trim(),
       room: formRoom.trim() || undefined,
       subjects: formSubjects.map((s) => ({
         subjectId: s.subjectId,
-        periodsPerWeek: s.periodsPerWeek === '' ? 1 : Math.max(1, Number(s.periodsPerWeek) || 1),
+        periodsPerWeek: Math.max(1, Number(s.periodsPerWeek) || 1),
+        preferredStaffId: s.preferredStaffId,
+        fixedSchedule: s.fixedSchedule,
       })),
     };
 
@@ -147,7 +169,7 @@ export const ClassView: React.FC<ClassViewProps> = ({
   };
 
   const formTotalPeriods = formSubjects.reduce(
-    (sum, s) => sum + (s.periodsPerWeek === '' ? 0 : Number(s.periodsPerWeek) || 0),
+    (sum, s) => sum + (Number(s.periodsPerWeek) || 0),
     0
   );
 
@@ -156,9 +178,9 @@ export const ClassView: React.FC<ClassViewProps> = ({
       {/* View Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Class & Curriculum Management</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Classes & Curriculums</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Configure student cohorts, departments, sections, and assigned subject weekly loads.
+            Configure student cohorts, year/section divisions, homerooms, and weekly subject requirements.
           </p>
         </div>
 
@@ -183,14 +205,14 @@ export const ClassView: React.FC<ClassViewProps> = ({
             className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 rounded-lg transition-colors shadow-xs flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            <span>Add Class Section</span>
+            <span>Add Class</span>
           </button>
         </div>
       </div>
 
-      {/* Search Toolbar */}
-      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between gap-3 transition-colors">
-        <div className="relative flex-1 max-w-md">
+      {/* Search & Filter Toolbar */}
+      <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-3 transition-colors">
+        <div className="relative flex-1 min-w-[240px]">
           <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 absolute left-3 top-2.5" />
           <input
             type="text"
@@ -203,36 +225,21 @@ export const ClassView: React.FC<ClassViewProps> = ({
         </div>
 
         <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-          Weekly Slot Budget: <strong className="text-slate-800 dark:text-slate-200">{totalSlotsPerClass} slots/week</strong>
+          Total Classes: <span className="font-bold text-slate-900 dark:text-slate-100">{classesList.length}</span>
         </div>
       </div>
 
-      {/* Empty State or Classes Grid */}
+      {/* Classes Grid */}
       {filteredClasses.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-12 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
-            <GraduationCap className="w-6 h-6" />
-          </div>
-          <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-            {classesList.length === 0 ? 'No Classes or Cohorts Configured' : 'No matching classes found'}
-          </h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
-            {classesList.length === 0
-              ? 'Add your grade sections, year groups, or degree cohorts. All fields and subject allocations are editable.'
-              : 'Try adjusting your search keywords.'}
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-12 text-center space-y-3">
+          <GraduationCap className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
+          <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">No classes configured</h3>
+          <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            {searchTerm ? 'No classes matched your filter.' : 'Add your first class section to begin scheduling.'}
           </p>
-          {classesList.length === 0 && (
-            <button
-              onClick={openAddModal}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors inline-flex items-center gap-1.5 cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Your First Class</span>
-            </button>
-          )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredClasses.map((cls) => {
             const totalReqPeriods = cls.subjects.reduce((sum, s) => sum + s.periodsPerWeek, 0);
             const isOverloaded = totalReqPeriods > totalSlotsPerClass;
@@ -240,11 +247,10 @@ export const ClassView: React.FC<ClassViewProps> = ({
             return (
               <div
                 key={cls.id}
-                id={`class-card-${cls.id}`}
-                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs flex flex-col justify-between hover:border-slate-300 dark:hover:border-slate-700 transition-all space-y-4"
+                className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-5 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between"
               >
                 <div>
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 flex items-center gap-2">
                         {cls.name}
@@ -313,22 +319,49 @@ export const ClassView: React.FC<ClassViewProps> = ({
                     <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
                       {cls.subjects.map((req) => {
                         const subject = subjectsList.find((s) => s.id === req.subjectId);
+                        const isNM = isNaanMudhalvanSubject(subject);
+                        const fixedSched = subject ? getResolvedFixedSchedule(subject, req, scheduleConfig) : null;
+
                         return (
                           <div
                             key={req.subjectId}
-                            className="flex items-center justify-between text-xs p-2 bg-slate-50/70 dark:bg-slate-800/50 rounded border border-slate-200 dark:border-slate-700"
+                            className={`flex flex-col gap-1 text-xs p-2 rounded border ${
+                              isNM
+                                ? 'bg-amber-50/60 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/70'
+                                : 'bg-slate-50/70 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'
+                            }`}
                           >
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono text-[11px]">
-                                {subject?.code || req.subjectId}
-                              </span>
-                              <span className="text-slate-600 dark:text-slate-300 truncate max-w-[140px]">
-                                {subject?.name || req.subjectId}
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-semibold text-slate-800 dark:text-slate-200 font-mono text-[11px]">
+                                  {subject?.code || req.subjectId}
+                                </span>
+                                <span className="text-slate-600 dark:text-slate-300 truncate max-w-[140px]">
+                                  {subject?.name || req.subjectId}
+                                </span>
+                              </div>
+                              <span
+                                className={`px-2 py-0.5 font-bold rounded text-[11px] border ${
+                                  isNM
+                                    ? 'bg-amber-100 dark:bg-amber-900 text-amber-900 dark:text-amber-200 border-amber-300 dark:border-amber-700'
+                                    : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-100 dark:border-indigo-800'
+                                }`}
+                              >
+                                {req.periodsPerWeek} p/wk
                               </span>
                             </div>
-                            <span className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold rounded text-[11px] border border-indigo-100 dark:border-indigo-800">
-                              {req.periodsPerWeek} p/wk
-                            </span>
+
+                            {isNM && fixedSched && (
+                              <div className="flex items-center justify-between text-[10px] text-amber-800 dark:text-amber-300/90 font-medium">
+                                <span className="flex items-center gap-1">
+                                  <Lock className="w-2.5 h-2.5 text-amber-600" />
+                                  Fixed: {fixedSched.day} (P{fixedSched.startPeriod} to P{fixedSched.startPeriod + (fixedSched.consecutivePeriods || 4) - 1})
+                                </span>
+                                <span className="text-[9px] font-bold text-amber-700 dark:text-amber-400 uppercase">
+                                  Locked from Shuffle
+                                </span>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
@@ -361,7 +394,7 @@ export const ClassView: React.FC<ClassViewProps> = ({
             </div>
 
             <form onSubmit={handleSaveClass} className="p-6 space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Department</label>
                   <input
@@ -372,39 +405,42 @@ export const ClassView: React.FC<ClassViewProps> = ({
                       setFormDept(e.target.value);
                       updateAutoName(e.target.value, formYear, formSection);
                     }}
+                    placeholder="e.g. Computer Science and Engineering"
                     className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Year</label>
-                  <select
-                    value={formYear}
-                    onChange={(e) => {
-                      setFormYear(e.target.value);
-                      updateAutoName(formDept, e.target.value, formSection);
-                    }}
-                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden cursor-pointer"
-                  >
-                    <option value="I">Year I (1st Year)</option>
-                    <option value="II">Year II (2nd Year)</option>
-                    <option value="III">Year III (3rd Year)</option>
-                    <option value="IV">Year IV (4th Year)</option>
-                  </select>
-                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Year / Cohort</label>
+                    <select
+                      value={formYear}
+                      onChange={(e) => {
+                        setFormYear(e.target.value);
+                        updateAutoName(formDept, e.target.value, formSection);
+                      }}
+                      className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden cursor-pointer"
+                    >
+                      <option value="I">I Year</option>
+                      <option value="II">II Year</option>
+                      <option value="III">III Year</option>
+                      <option value="IV">IV Year</option>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Section</label>
-                  <input
-                    type="text"
-                    required
-                    value={formSection}
-                    onChange={(e) => {
-                      setFormSection(e.target.value);
-                      updateAutoName(formDept, formYear, e.target.value);
-                    }}
-                    className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
-                  />
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Section</label>
+                    <input
+                      type="text"
+                      required
+                      value={formSection}
+                      onChange={(e) => {
+                        setFormSection(e.target.value);
+                        updateAutoName(formDept, formYear, e.target.value);
+                      }}
+                      className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
+                    />
+                  </div>
                 </div>
 
                 <div className="sm:col-span-2">
@@ -419,13 +455,13 @@ export const ClassView: React.FC<ClassViewProps> = ({
                   />
                 </div>
 
-                <div>
+                <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Assigned Classroom</label>
                   <input
                     type="text"
                     value={formRoom}
                     onChange={(e) => setFormRoom(e.target.value)}
-                    placeholder="e.g. Room 301"
+                    placeholder="e.g. Room 301 or LH-101"
                     className="w-full px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-indigo-500 focus:outline-hidden"
                   />
                 </div>
@@ -446,13 +482,17 @@ export const ClassView: React.FC<ClassViewProps> = ({
                   {subjectsList.map((subject) => {
                     const assigned = formSubjects.find((s) => s.subjectId === subject.id);
                     const isSelected = !!assigned;
+                    const isNM = isNaanMudhalvanSubject(subject);
+                    const fixedSched = getResolvedFixedSchedule(subject, assigned, scheduleConfig);
 
                     return (
                       <div
                         key={subject.id}
-                        className={`p-2.5 rounded-lg border text-xs flex items-center justify-between gap-3 transition-colors ${
+                        className={`p-2.5 rounded-lg border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-colors ${
                           isSelected
-                            ? 'bg-white dark:bg-slate-800 border-indigo-300 dark:border-indigo-600 shadow-2xs'
+                            ? isNM
+                              ? 'bg-amber-50/70 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 shadow-2xs'
+                              : 'bg-white dark:bg-slate-800 border-indigo-300 dark:border-indigo-600 shadow-2xs'
                             : 'bg-slate-100/70 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                         }`}
                       >
@@ -464,18 +504,26 @@ export const ClassView: React.FC<ClassViewProps> = ({
                             className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
                           />
                           <div>
-                            <span className="font-bold text-slate-800 dark:text-slate-200 font-mono text-[11px] mr-1.5">
-                              {subject.code}
-                            </span>
-                            <span className="font-medium text-slate-800 dark:text-slate-200">{subject.name}</span>
-                            <span className="text-[10px] text-slate-400 dark:text-slate-500 ml-1.5 uppercase font-semibold">
-                              ({subject.type})
-                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-slate-800 dark:text-slate-200 font-mono text-[11px]">
+                                {subject.code}
+                              </span>
+                              <span className="font-medium text-slate-800 dark:text-slate-200">{subject.name}</span>
+                              <span className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold">
+                                ({subject.type})
+                              </span>
+                            </div>
+                            {isNM && fixedSched && (
+                              <p className="text-[10px] text-amber-800 dark:text-amber-300 font-semibold flex items-center gap-1 mt-0.5">
+                                <Sparkles className="w-3 h-3 text-amber-600" />
+                                User Fixed Slot: {fixedSched.day} (P{fixedSched.startPeriod}-P{fixedSched.startPeriod + (fixedSched.consecutivePeriods || 4) - 1}) • Locked from Shuffle
+                              </p>
+                            )}
                           </div>
                         </div>
 
                         {isSelected && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 self-end sm:self-auto">
                             <span className="text-[11px] text-slate-500 dark:text-slate-400">Periods/wk:</span>
                             <input
                               type="number"
